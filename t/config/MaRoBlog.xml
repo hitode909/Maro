@@ -1,0 +1,10 @@
+<Keyspace Name="MaRoBlog">
+  <ColumnFamily Name="Entry"
+                CompareWith="UTF8Type"
+                Comment="Blog Entry"
+                />
+  <ReplicaPlacementStrategy>org.apache.cassandra.locator.RackUnawareStrategy</ReplicaPlacementStrategy>
+
+  <ReplicationFactor>1</ReplicationFactor>
+  <EndPointSnitch>org.apache.cassandra.locator.EndPointSnitch</EndPointSnitch>
+</Keyspace>
