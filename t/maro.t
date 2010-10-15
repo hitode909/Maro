@@ -80,14 +80,13 @@ sub _create_and_find : Test(4) {
         author => 'poepoepoe',
     );
 
-    $entry = Blog::Entry->new_by_key($key);
+    $entry = Blog::Entry->find($key);
 
     is $entry->key, $key;
-    is $entry->title, 'poe';
-    is $entry->body, 'poepoe';
-    is $entry->author, 'poepoepoe';
+    is $entry->{title}, 'poe';
+    is $entry->{body}, 'poepoe';
+    is $entry->{author}, 'poepoepoe';
 }
-
 
 
 __PACKAGE__->runtests;

@@ -33,7 +33,12 @@ sub create {
 
 sub find {
     my ($class, $key) = @_;
-    my $supercolumn = $class->get_supercolumn($key);
+    my $self = $class->new_by_key($key);
+
+    for my $column (@{$class->columns}) {
+        $self->$column;
+    }
+    $self;
 }
 
 sub slice {
@@ -102,7 +107,7 @@ sub default_keys {
 
 sub get_param {
     my ($self, $column) = @_;
-    $self->driver->get({
+    $self->{$column} ||= $self->driver->get({
         column => $column,
         $self->default_keys
     });
@@ -114,14 +119,6 @@ sub set_param {
         column => $column,
         $self->default_keys,
     }, $value);
-}
-
-sub get_supercolumn {
-    my ($class, $key) = @_;
-    $class->driver->get_supercolumn({
-        ($class->default_keys),
-        key => $key,
-    });
 }
 
 1;
