@@ -4,8 +4,9 @@ use warnings;
 use base qw (Class::Data::Inheritable);
 use Carp;
 use UUID::Tiny;
+use utf8;
 
-__PACKAGE__->mk_classdata($_) for qw(db_object key_space column_family columns schema_type);
+__PACKAGE__->mk_classdata($_) for qw(db_object key_space column_family columns utf8_columns schema_type);
 
 # public
 
@@ -34,7 +35,7 @@ sub create {
 sub find {
     my ($class, $key) = @_;
     my $self = $class->new_by_key($key);
-    $self->load_columns unless $class->schema_type eq 'tupple';
+    $self->load_columns unless $class->schema_type || '' eq 'tupple';
     $self;
 }
 
@@ -80,6 +81,7 @@ sub load_columns {
     if ($self->driver->can("slice_as_hash")) {
         my $values = $self->driver->slice_as_hash({$self->default_keys});
         for (keys %$values) {
+            utf8::decode($values->{$_}) if ($self->is_utf8_column($_) and not utf8::is_utf8($values->{$_}));
             $self->{$_} = $values->{$_};
         }
     } else {
@@ -134,12 +136,23 @@ sub default_keys {
     );
 }
 
+sub is_utf8_column {
+    my $class = shift;
+    my $col = shift or return;
+    my $utf8 = $class->utf8_columns or return;
+    ref $utf8 eq 'ARRAY' or return;
+    return grep { $_ eq $col } @$utf8;
+}
+
 sub get_param {
     my ($self, $column) = @_;
-    $self->{$column} ||= $self->driver->get({
+    return $self->{$column} if $self->{$column};
+    my $value = $self->driver->get({
         column => $column,
         $self->default_keys
     });
+    utf8::decode($value) if ($self->is_utf8_column($column) and not utf8::is_utf8($value));
+    $self->{$column} = $value;
 }
 
 sub set_param {

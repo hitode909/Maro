@@ -9,6 +9,7 @@ use Test::More;
 use MaRo;
 use Blog::Entry;
 use Blog::UserTimeline;
+use Encode;
 
 sub _use : Test(2) {
     use_ok 'MaRo';
@@ -120,6 +121,24 @@ sub _user_timeline : Test(8) {
     $tl->delete;
 
     is $tl->count, 0;
+}
+
+sub _utf8_columns : Test(4) {
+    my $key = rand;
+    my $title = '社長日記';
+    my $body = 'おなかすいた';
+    my $entry = Blog::Entry->create(
+        key => $key,
+        title => $title,
+        body => $body,
+        url => 'http://example.com',
+    );
+
+    $entry = Blog::Entry->find($key);
+    ok $entry;
+    ok Encode::is_utf8($entry->title), 'title is utf8';
+    ok Encode::is_utf8($entry->body), 'body is utf8';
+    ok !Encode::is_utf8($entry->url), 'url is not utf8';
 }
 
 
