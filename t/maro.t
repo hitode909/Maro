@@ -41,6 +41,7 @@ sub _set_param : Test(1) {
     my $entry = Blog::Entry->new_by_key('got-new-guitar');
     $entry->body('my guitar is very cool');
     $entry->author('hitodekun');
+    is $entry->author, 'hitodekun';
 }
 
 sub _new_and_set : Test(3) {
