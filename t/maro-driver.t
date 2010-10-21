@@ -10,17 +10,20 @@ use Test::More;
 use Test::Exception;
 use Blog::DataBase;
 
-sub _new : Test(2) {
+sub _new : Test(4) {
     use_ok 'MaRo::Driver';
+    use_ok 'MaRo::Driver::Net::Cassandra::libcassandra';
+    use_ok 'MaRo::Driver::Net::Cassandra';
     use_ok 'Blog::DataBase';
 }
 
-sub _set_get : Tests(3) {
-
-    my $driver = Blog::DataBase->driver;
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard1', key => 'user', column => 'from'}, 'Shiga');
-    is $driver->get({key_space => 'Keyspace1', column_family => 'Standard1', key => 'user', column => 'from'}), 'Shiga';
-    ok not $driver->get({key_space => 'Keyspace1', column_family => 'Standard1', parent_key => 'user', key => 'hitode', column => '___'});
+sub _set_get : Tests(6) {
+    for my $class qw(MaRo::Driver::Net::Cassandra MaRo::Driver::Net::Cassandra::libcassandra) {
+        my $driver = $class->new('Blog::DataBase');
+        ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard1', key => 'user', column => 'from'}, 'Shiga');
+        is $driver->get({key_space => 'Keyspace1', column_family => 'Standard1', key => 'user', column => 'from'}), 'Shiga';
+        ok not $driver->get({key_space => 'Keyspace1', column_family => 'Standard1', parent_key => 'user', key => 'hitode', column => '___'});
+    }
 }
 
 __PACKAGE__->runtests;
