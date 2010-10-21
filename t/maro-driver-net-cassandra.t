@@ -16,7 +16,7 @@ sub _new : Test(2) {
     use_ok 'Blog::DataBase';
 }
 
-sub _set_get : Tests(3) {
+sub _set_get : Tests(4) {
     my $driver = MaRo::Driver::Net::Cassandra->new('Blog::DataBase');
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'}, 'Shiga');
     is $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'}), 'Shiga';
@@ -24,7 +24,7 @@ sub _set_get : Tests(3) {
     ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'});
 }
 
-sub _slice : Test(12) {
+sub _slice : Test(9) {
     my $driver = MaRo::Driver::Net::Cassandra->new('Blog::DataBase');
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'}, 'Shiga');
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'age'},  21);
@@ -35,9 +35,7 @@ sub _slice : Test(12) {
     is $user->{age}, 21;
     is $user->{name}, 'Inoue';
 
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'});
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'age'});
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'name'});
+    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user'});
 
     $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user'});
     is $user->{from}, undef;

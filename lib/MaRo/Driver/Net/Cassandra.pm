@@ -56,10 +56,10 @@ sub get {
           );
         $value = $what->column->value;
     };
-    if ($@->isa('Net::Cassandra::Backend::NotFoundException')) {
-        die 'not found';
+    if ($@) {
+        return if $@->isa('Net::Cassandra::Backend::NotFoundException');
+        die $@->why if $@;
     }
-    die $@->why if $@;
     $value;
 }
 
