@@ -89,7 +89,7 @@ sub _create_and_find : Test(4) {
     is $entry->{author}, 'poepoepoe';
 }
 
-sub _create_with_not_defined_columns : Test(4) {
+sub _create_with_not_defined_columns : Test(2) {
     my $key = rand;
     my $entry = Blog::Entry->create(
         key => $key,
@@ -102,8 +102,6 @@ sub _create_with_not_defined_columns : Test(4) {
     is $entry->category, 'fishing';
 
     $entry = Blog::Entry->find($key);
-    is $entry->{category}, undef;
-    is $entry->category, 'fishing';
     is $entry->{category}, 'fishing';
 }
 

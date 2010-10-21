@@ -26,11 +26,11 @@ sub _attributes : Test(3) {
 sub _driver : Test(4) {
     my $driver = Blog::DataBase->driver;
     ok $driver;
-    isa_ok $driver, 'MaRo::Driver::Net::Cassandra::libcassandra';
+    isa_ok $driver, 'MaRo::Driver::Net::Cassandra';
 
     $driver = Blog::DataBase->driver;
     ok $driver;
-    isa_ok $driver, 'MaRo::Driver::Net::Cassandra::libcassandra';
+    isa_ok $driver, 'MaRo::Driver::Net::Cassandra';
 }
 
 __PACKAGE__->runtests;

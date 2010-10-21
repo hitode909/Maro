@@ -34,10 +34,7 @@ sub create {
 sub find {
     my ($class, $key) = @_;
     my $self = $class->new_by_key($key);
-
-    for my $column (@{$class->columns}) {
-        $self->$column;
-    }
+    $self->load_columns;
     $self;
 }
 
@@ -58,6 +55,20 @@ sub AUTOLOAD {
     return if $method eq 'DESTROY';
 
     $self->param($method, @_);
+}
+
+sub load_columns {
+    my ($self) = @_;
+    if ($self->driver->can("slice_as_hash")) {
+        my $values = $self->driver->slice_as_hash({$self->default_keys});
+        for (keys %$values) {
+            $self->{$_} = $values->{$_};
+        }
+    } else {
+        for my $column (@{$self->columns}) {
+            $self->$column;
+        }
+    }
 }
 
 sub has_column {

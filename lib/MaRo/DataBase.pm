@@ -6,7 +6,7 @@ use Carp;
 use UNIVERSAL::require;
 
 __PACKAGE__->mk_classdata($_) for qw(server key_space driver_object driver_class);
-__PACKAGE__->mk_classdata(default_driver_class => 'MaRo::Driver::Net::Cassandra::libcassandra');
+__PACKAGE__->mk_classdata(default_driver_class => 'MaRo::Driver::Net::Cassandra');
 
 sub host {
     my ($class) = @_;
