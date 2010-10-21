@@ -63,6 +63,24 @@ sub get {
     $value;
 }
 
+sub count {
+    my ($self, $arg) = @_;
+    my $count;
+    eval {
+        $count = $self->client->get_count(
+            $arg->{key_space},
+            $arg->{key},
+            Net::Cassandra::Backend::ColumnParent->new(
+                {
+                    column_family => $arg->{column_family} }
+            ),
+            Net::Cassandra::Backend::ConsistencyLevel::QUORUM
+          );
+    };
+    die $@->why if $@;
+    $count;
+}
+
 # 何を返すべきか．．．．．．．．．
 sub slice {
     my ($self, $arg) = @_;

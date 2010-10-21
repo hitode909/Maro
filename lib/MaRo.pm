@@ -3,8 +3,9 @@ use strict;
 use warnings;
 use base qw (Class::Data::Inheritable);
 use Carp;
+use UUID::Tiny;
 
-__PACKAGE__->mk_classdata($_) for qw(db_object key_space column_family columns);
+__PACKAGE__->mk_classdata($_) for qw(db_object key_space column_family columns schema_type);
 
 # public
 
@@ -30,21 +31,38 @@ sub create {
     $self;
 }
 
-
 sub find {
     my ($class, $key) = @_;
     my $self = $class->new_by_key($key);
-    $self->load_columns;
+    $self->load_columns unless $class->schema_type eq 'tupple';
     $self;
 }
 
+# start, finish, reverse, count
 sub slice {
-    my ($class, $from, $to) = @_;
+    my ($self) = @_;
+
+    $self->driver->slice({$self->default_keys});
+}
+
+sub add_value {
+    my ($self, $value) = @_;
+    $self->set_param(create_UUID(UUID_V1), $value);
 }
 
 sub key {
     my ($self) = @_;
     $self->{key};
+}
+
+sub delete {
+    my ($self) = @_;
+    $self->driver->delete({$self->default_keys});
+}
+
+sub count {
+    my ($self) = @_;
+    $self->driver->count({$self->default_keys});
 }
 
 # private

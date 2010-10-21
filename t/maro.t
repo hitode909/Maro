@@ -8,6 +8,7 @@ use lib file(__FILE__)->dir->subdir('lib')->stringify;
 use Test::More;
 use MaRo;
 use Blog::Entry;
+use Blog::UserTimeline;
 
 sub _use : Test(2) {
     use_ok 'MaRo';
@@ -103,6 +104,22 @@ sub _create_with_not_defined_columns : Test(2) {
 
     $entry = Blog::Entry->find($key);
     is $entry->{category}, 'fishing';
+}
+
+sub _user_timeline : Test(8) {
+    my $tl = Blog::UserTimeline->find('hitode');
+    ok $tl;
+    for(0..4) {
+        $tl->add_value($_);
+    }
+    is $tl->count, 5;
+
+    for(0..4) {
+        is $tl->slice->[$_]->[1], $_;
+    }
+    $tl->delete;
+
+    is $tl->count, 0;
 }
 
 
