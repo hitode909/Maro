@@ -81,7 +81,6 @@ sub count {
     $count;
 }
 
-# 何を返すべきか．．．．．．．．．
 sub slice {
     my ($self, $arg) = @_;
     my $what;
@@ -98,7 +97,11 @@ sub slice {
                 {
                     slice_range => Net::Cassandra::Backend::SliceRange->new(
                         {
-                            start => $arg->{start} || '', finish => '', count => $arg->{count} || 100 }
+                            start => $arg->{start} || '',
+                            finish => $arg->{finish} || '',
+                            count => $arg->{count} || 100,
+                            reversed => $arg->{reversed} || 0,
+                        }
                 )
                 }
             ),

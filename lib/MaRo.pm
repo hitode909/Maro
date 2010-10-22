@@ -39,11 +39,15 @@ sub find {
     $self;
 }
 
-# start, finish, reverse, count
 sub slice {
-    my ($self) = @_;
+    my ($self, %args) = @_;
+    my $option = {$self->default_keys};
+    $option->{count} = $args{count} if defined $args{count};
+    $option->{start} = $args{start} if defined $args{start};
+    $option->{finish} = $args{finish} if defined $args{finish};
+    $option->{reversed} = $args{reversed} if defined $args{reversed};
 
-    $self->driver->slice({$self->default_keys});
+    $self->driver->slice($option);
 }
 
 sub add_value {

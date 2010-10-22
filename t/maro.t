@@ -108,7 +108,7 @@ sub _create_with_not_defined_columns : Test(2) {
 }
 
 sub _user_timeline : Test(8) {
-    my $tl = Blog::UserTimeline->find('hitode');
+    my $tl = Blog::UserTimeline->find(rand);
     ok $tl;
     for(0..4) {
         $tl->add_value($_);
@@ -141,6 +141,48 @@ sub _utf8_columns : Test(4) {
     ok !Encode::is_utf8($entry->url), 'url is not utf8';
 }
 
+sub _slice : Test(11) {
+    my $tl = Blog::UserTimeline->find(rand);
+    for(0..10) {
+        $tl->add_value($_);
+    }
+
+    my $list = $tl->slice(count => 3);
+    is scalar @$list, 3;
+    is_deeply [map {$_->[1]} @$list], [0, 1, 2], 'count';
+    my $key2 = $list->[2]->[0];
+
+    $list = $tl->slice(start => $key2, count => 5);
+    is_deeply [map {$_->[1]} @$list], [2,3,4,5,6], 'count, start';
+
+    my $key6 = $list->[4]->[0];
+    $list = $tl->slice(start => $key6, count => 100);
+    is_deeply [map {$_->[1]} @$list], [6,7,8,9,10], 'large count';
+
+    $list = $tl->slice(finish => $key2);
+    is_deeply [map {$_->[1]} @$list], [0,1,2], 'finish';
+
+    $list = $tl->slice(start => $key2, finish => $key6);
+    is_deeply [map {$_->[1]} @$list], [2,3,4,5,6], 'start, finish';
+
+    $list = $tl->slice(start => $key2, finish => $key6, count => 2);
+    is_deeply [map {$_->[1]} @$list], [2,3], 'start, finish, count';
+
+    $list = $tl->slice(reversed => 1);
+    is_deeply [map {$_->[1]} @$list], [10,9,8,7,6,5,4,3,2,1,0], 'reversed';
+
+    $list = $tl->slice(reversed => 1, count => 3);
+    is_deeply [map {$_->[1]} @$list], [10,9,8], 'reversed, count';
+
+    $list = $tl->slice(reversed => 1, count => 3, start => $key6);
+    is_deeply [map {$_->[1]} @$list], [6,5,4], 'reversed, count, start';
+
+    $list = $tl->slice(reversed => 1, start => $key6, finish => $key2);
+    is_deeply [map {$_->[1]} @$list], [6,5,4,3,2], 'reversed, start, finish';
+
+
+    $tl->delete;
+}
 
 __PACKAGE__->runtests;
 
