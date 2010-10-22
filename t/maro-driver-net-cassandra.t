@@ -18,26 +18,28 @@ sub _new : Test(2) {
 
 sub _set_get : Tests(4) {
     my $driver = MaRo::Driver::Net::Cassandra->new('Blog::DataBase');
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'}, 'Shiga');
-    is $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'}), 'Shiga';
-    ok not $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', parent_key => 'user', key => 'hitode', column => '___'});
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'});
+    my $key = rand;
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}, 'Shiga');
+    is $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}), 'Shiga';
+    ok not $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', parent_key => $key, key => 'hitode', column => '___'});
+    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'});
 }
 
-sub _slice : Test(9) {
+sub _slice : Test(10) {
+    my $key = rand;
     my $driver = MaRo::Driver::Net::Cassandra->new('Blog::DataBase');
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'}, 'Shiga');
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'age'},  21);
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'name'}, 'Inoue');
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}, 'Shiga');
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'age'},  21);
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'name'}, 'Inoue');
 
-    my $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user'});
+    my $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Standard2', key => $key});
     is $user->{from}, 'Shiga';
     is $user->{age}, 21;
     is $user->{name}, 'Inoue';
 
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user'});
+    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $key});
 
-    $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user'});
+    $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Standard2', key => $key});
     is $user->{from}, undef;
     is $user->{age}, undef;
     is $user->{name}, undef;
