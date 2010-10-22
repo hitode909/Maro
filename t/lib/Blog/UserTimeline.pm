@@ -4,6 +4,6 @@ use warnings;
 use base qw (Blog::Base);
 
 __PACKAGE__->column_family('UserTimeline');
-__PACKAGE__->schema_type('tupple');
+__PACKAGE__->set_as_list_class;
 
 1;
