@@ -141,6 +141,16 @@ sub delete {
     1;
 }
 
+sub describe_keyspace {
+    my ($self, $arg) = @_;
+    my $what;
+    eval {
+        $what = $self->client->describe_keyspace($arg->{key_space});
+    };
+    die $@->why if $@;
+    $what;
+}
+
 sub validate_key_arg {
     my ($self, $arg) = @_;
     foreach (qw{key_space key column_family column}) {

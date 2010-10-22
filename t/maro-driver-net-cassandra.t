@@ -45,6 +45,14 @@ sub _slice : Test(10) {
     is $user->{name}, undef;
 }
 
+sub _describe : Tests(2) {
+    my $driver = MaRo::Driver::Net::Cassandra->new('Blog::DataBase');
+    my $desc = ($driver->describe_keyspace({key_space => 'MaRoBlog'}));
+    ok $desc->{Entry};
+    is $desc->{Entry}->{Type}, 'Standard';
+}
+
+
 __PACKAGE__->runtests;
 
 1;
