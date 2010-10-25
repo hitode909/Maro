@@ -109,9 +109,7 @@ sub slice {
           );
     };
     die $@->why if $@;
-    MaRo::List->new([map {
-        MaRo::Column->new({name => $_->column->name, value => $_->column->value, timestamp => $_->column->timestamp})
-    } @$what]);
+    MaRo::List->from_backend_list($what);
 }
 
 sub multiget_slice {
