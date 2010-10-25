@@ -54,6 +54,28 @@ sub _describe : Tests(2) {
     is $desc->{Entry}->{Type}, 'Standard';
 }
 
+sub _multiget_slice : Test(4) {
+    my $driver = MaRo::Driver::Net::Cassandra->new('localhost', 9160);
+
+    my $multiget_empty = $driver->multiget_slice({key_space => 'Keyspace1', column_family => 'Standard2', keys => [qw{dummy1 dummy2 dummy3}], column_names => [qw{dummy1 dummy2}]});
+    is_deeply $multiget_empty->{dummy1}, [];
+
+    my @keys;
+    for(0..2) {
+        my $key = rand;
+        push @keys, $key;
+        $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'key'  }, $key);
+        $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'index'}, $_);
+        $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'hello'}, 'hello');
+    }
+    my $multiget = $driver->multiget_slice({key_space => 'Keyspace1', column_family => 'Standard2', keys => [@keys], column_names => [qw{key index}]});
+
+    for(@keys) {
+        ok $multiget->{$_};
+        $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $_});
+    }
+}
+
 __PACKAGE__->runtests;
 
 1;

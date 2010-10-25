@@ -114,6 +114,28 @@ sub slice {
     } @$what]);
 }
 
+sub multiget_slice {
+    my ($self, $arg) = @_;
+    my $what;
+    eval {
+        $what = $self->client->multiget_slice(
+            $arg->{key_space},
+            $arg->{keys},
+            Net::Cassandra::Backend::ColumnParent->new(
+                {
+                    column_family => $arg->{column_family} }
+            ),
+            Net::Cassandra::Backend::SlicePredicate->new(
+                {
+                    column_names => $arg->{column_names}, }
+            ),
+            Net::Cassandra::Backend::ConsistencyLevel::QUORUM
+          );
+    };
+    die $@->why if $@;
+    $what;
+}
+
 sub delete {
     my ($self, $arg) = @_;
     eval {
