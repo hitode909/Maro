@@ -8,7 +8,7 @@ use utf8;
 use UNIVERSAL::require;
 use DateTime;
 
-__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family columns utf8_columns _is_list);
+__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list);
 __PACKAGE__->mk_classdata(default_driver_class => 'MaRo::Driver::Net::Cassandra');
 
 # public
@@ -160,17 +160,8 @@ sub load_columns {
             $self->{$_} = $values->{$_};
         }
     } else {
-        for my $column (@{$self->columns}) {
-            $self->$column;
-        }
+        # TODO: libcassandraはsliceできない
     }
-}
-
-sub has_column {
-    my $class = shift;
-    my $col = shift or return;
-    $class->columns or return;
-    grep { $col eq $_ } @{$class->columns};
 }
 
 sub param {

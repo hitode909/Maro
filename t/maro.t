@@ -28,12 +28,6 @@ sub _column_family : Test(1) {
     is $column_family, 'Entry';
 }
 
-sub _columns : Test(1) {
-    my $columns = Blog::Entry->columns;
-
-    is_deeply $columns, [qw(author title body url)];
-}
-
 sub _set_param : Test(1) {
     my $entry = Blog::Entry->new_by_key('got-new-guitar');
     $entry->body('my guitar is very cool');
