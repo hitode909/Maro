@@ -9,6 +9,7 @@ use Test::More;
 use MaRo;
 use Blog::Entry;
 use Blog::UserTimeline;
+use Blog::User;
 use Encode;
 
 sub _use : Test(2) {
@@ -214,6 +215,21 @@ sub _datetime_columns : Tests {
     $entry = Blog::Entry->find($key);
     isa_ok $entry->created_on, 'DateTime';
     is $entry->created_on->epoch, $now->epoch;
+}
+
+sub _reference_object : Test(6) {
+    my $user = Blog::User->create(
+        key => rand,
+        name => 'test-user',
+    );
+
+    ok $user->write_entry('hello');
+    ok $user->write_entry('goodbye');
+    my $entries = $user->entries;
+    is $entries->length, 2;
+    isa_ok $entries->[0], 'Blog::Entry';
+    isa_ok $entries->[1], 'Blog::Entry';
+    is_deeply $entries->map_body->to_a, ['hello', 'goodbye'];
 }
 
 __PACKAGE__->runtests;

@@ -8,7 +8,7 @@ use utf8;
 use UNIVERSAL::require;
 use DateTime;
 
-__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list);
+__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list _reference_class);
 __PACKAGE__->mk_classdata(default_driver_class => 'MaRo::Driver::Net::Cassandra');
 
 # public
@@ -66,6 +66,26 @@ sub slice {
     $option->{reversed} = $args{reversed} if defined $args{reversed};
 
     $self->driver->slice($option);
+}
+
+sub slice_as_reference {
+    my ($self, %args) = @_;
+    croak "reference class not defined" unless $self->_reference_class;
+    $self->slice(%args)->map(sub { $self->_reference_class->new_by_key($_->value) });
+
+}
+
+sub add_reference_object {
+    my ($self, $object) = @_;
+    croak "reference class not defined" unless $self->_reference_class;
+    croak "$object is not ${self->_reference_class}" unless $object->isa($self->_reference_class);
+    $self->add_value($object->key);
+}
+
+sub reference_object {
+    my ($self) = @_;
+    die "reference class not defined" unless $self->_reference_class;
+    $self->_reference_class->find($self->value);
 }
 
 sub add_value {
@@ -141,6 +161,11 @@ sub datetime_columns {
     }
 }
 
+sub reference_class {
+    my ($class, $reference_class) = @_;
+    $class->_reference_class($reference_class);
+}
+
 # private
 sub AUTOLOAD {
     my $self = shift;
@@ -209,10 +234,11 @@ sub is_utf8_column {
 sub get_param {
     my ($self, $column) = @_;
     return $self->{$column} if $self->{$column};
-    my $value = $self->driver->get({
+    my $co = $self->driver->get({
         column => $column,
         $self->default_keys
     });
+    my $value = $co ? $co->value : undef;
     utf8::decode($value) if ($self->is_utf8_column($column) and not utf8::is_utf8($value));
     $self->{$column} = $value;
 }
