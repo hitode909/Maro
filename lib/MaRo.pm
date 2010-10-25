@@ -6,7 +6,7 @@ use Carp;
 use UUID::Tiny;
 use utf8;
 
-__PACKAGE__->mk_classdata($_) for qw(db_object key_space column_family columns utf8_columns _am_i_list);
+__PACKAGE__->mk_classdata($_) for qw(db_object key_space column_family columns utf8_columns _is_list);
 
 # public
 
@@ -35,23 +35,23 @@ sub create {
 sub find {
     my ($class, $key) = @_;
     my $self = $class->new_by_key($key);
-    $self->load_columns if $class->am_i_object;
+    $self->load_columns if $class->is_object;
     $self;
 }
 
 sub set_as_list_class {
     my ($class) = @_;
-    $class->_am_i_list(1);
+    $class->_is_list(1);
 }
 
-sub am_i_list {
+sub is_list {
     my ($class) = @_;
-    $class->_am_i_list;
+    $class->_is_list;
 }
 
-sub am_i_object {
+sub is_object {
     my ($class) = @_;
-    !$class->_am_i_list;
+    !$class->_is_list;
 }
 
 sub slice {
