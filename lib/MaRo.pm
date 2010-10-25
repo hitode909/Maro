@@ -93,6 +93,54 @@ sub updated_on {
     DateTime->from_epoch(epoch => (reverse sort map {$_->timestamp} @{$self->slice})[0]);
 }
 
+sub inflate_column {
+    my $class = shift;
+    @_ % 2 and croak "You gave me an odd number of parameters to inflate_column()";
+
+    my %args = @_;
+    while (my ($col, $as) = each %args) {
+        no strict 'refs';
+        no warnings 'redefine';
+
+        if (ref $as and ref $as eq 'HASH') {
+            for (qw/inflate deflate/) {
+                if ($as->{$_} and ref $as->{$_} ne 'CODE') {
+                    croak sprintf "parameter '%s' takes only CODE reference", $_
+                }
+            }
+
+            *{"$class\::$col"} = sub {
+                my $self = shift;
+                if (@_) {
+                    $as->{deflate}
+                        ? $self->param( $col => $as->{deflate}->(@_) )
+                        : $self->param( $col => @_ );
+                } else {
+                    $as->{inflate}
+                        ? $as->{inflate}->( $self->param($col) )
+                        : $self->param( $col );
+                }
+            }
+        } else {
+            *{"$class\::$col"} = $class->_column_as_handler($col, $as);
+        }
+    }
+}
+
+sub datetime_columns {
+    my $class = shift;
+    my @columns = ref $_[0] eq 'ARRAY' ? @$_[0] : @_;
+
+    foreach (@columns) {
+        $class->inflate_column(
+            $_ => {
+                deflate => sub { $_[0] && $_[0]->isa('DateTime') ? shift->epoch : 0 },
+                inflate => sub { $_[0] && DateTime->from_epoch(epoch => shift) },
+            }
+        );
+    }
+}
+
 # private
 sub AUTOLOAD {
     my $self = shift;

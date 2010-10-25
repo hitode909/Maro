@@ -190,6 +190,39 @@ sub _slice : Test(11) {
     $tl->delete;
 }
 
+sub _inflate_deflate : Tests {
+    my $key = rand;
+    Blog::Entry->inflate_column(
+        michael => {
+            deflate => sub { $_[0] . ' is' },
+            inflate => sub { $_[0] . ' it.' },
+        }
+    );
+
+    my $entry = Blog::Entry->create(
+        key => $key,
+        michael => 'This',
+    );
+
+    $entry = Blog::Entry->find($key);
+    is $entry->michael, 'This is it.';
+}
+
+sub _datetime_columns : Tests {
+    my $key = rand;
+    Blog::Entry->datetime_columns(qw/created_on/);
+
+    my $now = DateTime->now;
+    my $entry = Blog::Entry->create(
+        key => $key,
+        created_on => $now,
+        michael => 'hello',
+    );
+    $entry = Blog::Entry->find($key);
+    isa_ok $entry->created_on, 'DateTime';
+    is $entry->created_on->epoch, $now->epoch;
+}
+
 __PACKAGE__->runtests;
 
 1;
