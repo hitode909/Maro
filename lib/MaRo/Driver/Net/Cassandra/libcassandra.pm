@@ -5,6 +5,7 @@ use base qw(MaRo::Driver);
 
 use Net::Cassandra::libcassandra;
 use Carp 'croak';
+use MaRo::Column;
 
 __PACKAGE__->mk_accessors(
     qw(client)
@@ -34,7 +35,7 @@ sub get {
         $value = $self->key_space($arg)->getColumnValue($arg->{key}, $arg->{column_family}, $arg->{parent_key} || '', $arg->{column});
     };
     if ($@) { return; }
-    $value;
+    MaRo::Column->new({name => $arg->{column}, value => $value, timestamp => time});
 }
 
 # TODO: 効率化

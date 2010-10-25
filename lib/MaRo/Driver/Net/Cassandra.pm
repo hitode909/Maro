@@ -6,6 +6,7 @@ use base qw(MaRo::Driver);
 use Net::Cassandra;
 use Carp 'croak';
 use UNIVERSAL::isa;
+use MaRo::Column;
 
 __PACKAGE__->mk_accessors(
     qw(client)
@@ -43,9 +44,9 @@ sub set {
 sub get {
     my ($self, $arg) = @_;
     $self->validate_key_arg($arg);
-    my $value;
+    my $what;
     eval {
-        my $what = $self->client->get(
+        $what = $self->client->get(
             $arg->{key_space},
             $arg->{key},
             Net::Cassandra::Backend::ColumnPath->new(
@@ -54,13 +55,12 @@ sub get {
             ),
             Net::Cassandra::Backend::ConsistencyLevel::QUORUM
           );
-        $value = $what->column->value;
     };
     if ($@) {
         return if $@->isa('Net::Cassandra::Backend::NotFoundException');
         die $@->why if $@;
     }
-    $value;
+    MaRo::Column->new({name => $what->column->name, value => $what->column->value, timestamp => $what->column->timestamp});
 }
 
 sub count {
@@ -109,7 +109,9 @@ sub slice {
           );
     };
     die $@->why if $@;
-    [map { [$_->column->name, $_->column->value]} @$what];
+    [map {
+        MaRo::Column->new({name => $_->column->name, value => $_->column->value, timestamp => $_->column->timestamp})
+    } @$what];
 }
 
 sub slice_as_hash {
@@ -118,8 +120,7 @@ sub slice_as_hash {
 
     my $result = {};
     for (@$values) {
-        my ($k, $v) = @$_;
-        $result->{$k} = $v;
+        $result->{$_->name} = $_->value;
     }
     $result;
 }

@@ -16,12 +16,16 @@ sub _new : Test(2) {
     use_ok 'Blog::DataBase';
 }
 
-sub _set_get : Tests(4) {
+sub _set_get : Test(7) {
     my $driver = MaRo::Driver::Net::Cassandra->new('Blog::DataBase');
     my $key = rand;
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}, 'Shiga');
-    is $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}), 'Shiga';
-    ok not $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', parent_key => $key, key => 'hitode', column => '___'});
+    my $column = $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'});
+    isa_ok $column, 'MaRo::Column';
+    is $column->value, 'Shiga';
+    is $column->name, 'from';
+    ok time - $column->timestamp < 10;
+    is $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', parent_key => $key, key => 'hitode', column => '___'}), undef;
     ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'});
 }
 
@@ -51,7 +55,6 @@ sub _describe : Tests(2) {
     ok $desc->{Entry};
     is $desc->{Entry}->{Type}, 'Standard';
 }
-
 
 __PACKAGE__->runtests;
 
