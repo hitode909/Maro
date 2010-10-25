@@ -136,6 +136,17 @@ sub _utf8_columns : Test(4) {
     ok !Encode::is_utf8($entry->url), 'url is not utf8';
 }
 
+sub _updated_on : Test(1) {
+    my $key = rand;
+    my $entry = Blog::Entry->create(
+        key => $key,
+        title => 'よろしく',
+    );
+
+    $entry = Blog::Entry->find($key);
+    ok ((DateTime->now - $entry->updated_on)->delta_seconds < 10);
+}
+
 sub _slice : Test(11) {
     my $tl = Blog::UserTimeline->find(rand);
     for(0..10) {

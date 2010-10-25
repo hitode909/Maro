@@ -6,6 +6,7 @@ use Carp;
 use UUID::Tiny;
 use utf8;
 use UNIVERSAL::require;
+use DateTime;
 
 __PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family columns utf8_columns _is_list);
 __PACKAGE__->mk_classdata(default_driver_class => 'MaRo::Driver::Net::Cassandra');
@@ -85,6 +86,11 @@ sub delete {
 sub count {
     my ($self) = @_;
     $self->driver->count({$self->default_keys});
+}
+
+sub updated_on {
+    my ($self) = @_;
+    DateTime->from_epoch(epoch => (reverse sort map {$_->timestamp} @{$self->slice})[0]);
 }
 
 # private
