@@ -1,4 +1,4 @@
-package MaRo::Driver;
+package Maro::Driver;
 use strict;
 use warnings;
 use base qw(

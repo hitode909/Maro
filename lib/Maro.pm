@@ -1,4 +1,4 @@
-package MaRo;
+package Maro;
 use strict;
 use warnings;
 use base qw (Class::Data::Inheritable);
@@ -9,7 +9,7 @@ use UNIVERSAL::require;
 use DateTime;
 
 __PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list _reference_class);
-__PACKAGE__->mk_classdata(default_driver_class => 'MaRo::Driver::Net::Cassandra');
+__PACKAGE__->mk_classdata(default_driver_class => 'Maro::Driver::Net::Cassandra');
 
 # public
 

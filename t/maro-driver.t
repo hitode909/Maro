@@ -10,13 +10,13 @@ use Test::More;
 use Test::Exception;
 
 sub _new : Test(3) {
-    use_ok 'MaRo::Driver';
-    use_ok 'MaRo::Driver::Net::Cassandra::libcassandra';
-    use_ok 'MaRo::Driver::Net::Cassandra';
+    use_ok 'Maro::Driver';
+    use_ok 'Maro::Driver::Net::Cassandra::libcassandra';
+    use_ok 'Maro::Driver::Net::Cassandra';
 }
 
 sub _set_get : Tests(6) {
-    for my $class qw(MaRo::Driver::Net::Cassandra MaRo::Driver::Net::Cassandra::libcassandra) {
+    for my $class qw(Maro::Driver::Net::Cassandra Maro::Driver::Net::Cassandra::libcassandra) {
         my $driver = $class->new('localhost', 9160);
         ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'}, 'Shiga');
         is $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', key => 'user', column => 'from'})->value, 'Shiga';
@@ -27,4 +27,3 @@ sub _set_get : Tests(6) {
 __PACKAGE__->runtests;
 
 1;
-

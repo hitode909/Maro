@@ -1,4 +1,4 @@
-<Keyspace Name="MaRoBlog">
+<Keyspace Name="MaroBlog">
   <ColumnFamily Name="Entry"
                 CompareWith="UTF8Type"
                 Comment="Blog Entry"

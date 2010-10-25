@@ -1,13 +1,13 @@
-package MaRo::Driver::Net::Cassandra;
+package Maro::Driver::Net::Cassandra;
 use strict;
 use warnings;
-use base qw(MaRo::Driver);
+use base qw(Maro::Driver);
 
 use Net::Cassandra;
 use Carp 'croak';
 use UNIVERSAL::isa;
-use MaRo::Column;
-use MaRo::List;
+use Maro::Column;
+use Maro::List;
 
 __PACKAGE__->mk_accessors(
     qw(client)
@@ -60,7 +60,7 @@ sub get {
         return if $@->isa('Net::Cassandra::Backend::NotFoundException');
         die $@->why if $@;
     }
-    MaRo::Column->new({name => $what->column->name, value => $what->column->value, timestamp => $what->column->timestamp});
+    Maro::Column->new({name => $what->column->name, value => $what->column->value, timestamp => $what->column->timestamp});
 }
 
 sub count {
@@ -109,7 +109,7 @@ sub slice {
           );
     };
     die $@->why if $@;
-    MaRo::List->from_backend_list($what);
+    Maro::List->from_backend_list($what);
 }
 
 sub multiget_slice {
@@ -133,7 +133,7 @@ sub multiget_slice {
     die $@->why if $@;
     my $result = {};
     for (keys %$what) {
-        $result->{$_} = MaRo::List->from_backend_list($what->{$_});
+        $result->{$_} = Maro::List->from_backend_list($what->{$_});
     }
     $result;
 }

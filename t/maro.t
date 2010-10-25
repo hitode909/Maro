@@ -6,21 +6,21 @@ use Path::Class;
 use lib file(__FILE__)->dir->parent->subdir('lib')->stringify;
 use lib file(__FILE__)->dir->subdir('lib')->stringify;
 use Test::More;
-use MaRo;
+use Maro;
 use Blog::Entry;
 use Blog::UserTimeline;
 use Blog::User;
 use Encode;
 
 sub _use : Test(2) {
-    use_ok 'MaRo';
+    use_ok 'Maro';
     use_ok 'Blog::Entry';
 }
 
 sub _key_space : Test(1) {
     my $key_space = Blog::Entry->key_space;
 
-    is $key_space, 'MaRoBlog';
+    is $key_space, 'MaroBlog';
 }
 
 sub _column_family : Test(1) {

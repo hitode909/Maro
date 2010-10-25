@@ -8,18 +8,18 @@ use lib file(__FILE__)->dir->subdir('lib')->stringify;
 
 use Test::More;
 use Test::Exception;
-use MaRo::Driver::Net::Cassandra;
+use Maro::Driver::Net::Cassandra;
 
 sub _new : Test(1) {
-    use_ok 'MaRo::Driver::Net::Cassandra';
+    use_ok 'Maro::Driver::Net::Cassandra';
 }
 
 sub _set_get : Test(7) {
-    my $driver = MaRo::Driver::Net::Cassandra->new('localhost', 9160);
+    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
     my $key = rand;
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}, 'Shiga');
     my $column = $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'});
-    isa_ok $column, 'MaRo::Column';
+    isa_ok $column, 'Maro::Column';
     is $column->value, 'Shiga';
     is $column->name, 'from';
     ok time - $column->timestamp < 10;
@@ -29,7 +29,7 @@ sub _set_get : Test(7) {
 
 sub _slice : Test(10) {
     my $key = rand;
-    my $driver = MaRo::Driver::Net::Cassandra->new('localhost', 9160);
+    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}, 'Shiga');
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'age'},  21);
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'name'}, 'Inoue');
@@ -48,14 +48,14 @@ sub _slice : Test(10) {
 }
 
 sub _describe : Tests(2) {
-    my $driver = MaRo::Driver::Net::Cassandra->new('localhost', 9160);
-    my $desc = ($driver->describe_keyspace({key_space => 'MaRoBlog'}));
+    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
+    my $desc = ($driver->describe_keyspace({key_space => 'MaroBlog'}));
     ok $desc->{Entry};
     is $desc->{Entry}->{Type}, 'Standard';
 }
 
 sub _multiget_slice : Test(7) {
-    my $driver = MaRo::Driver::Net::Cassandra->new('localhost', 9160);
+    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
 
     my $multiget_empty = $driver->multiget_slice({key_space => 'Keyspace1', column_family => 'Standard2', keys => [qw{dummy1 dummy2 dummy3}], column_names => [qw{dummy1 dummy2}]});
     is_deeply $multiget_empty->{dummy1}, [];
@@ -71,7 +71,7 @@ sub _multiget_slice : Test(7) {
     my $multiget = $driver->multiget_slice({key_space => 'Keyspace1', column_family => 'Standard2', keys => [@keys], column_names => [qw{key index}]});
 
     for(@keys) {
-        isa_ok $multiget->{$_}, 'MaRo::List';
+        isa_ok $multiget->{$_}, 'Maro::List';
         is $multiget->{$_}->to_hash->{key}, $_;
         $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $_});
     }

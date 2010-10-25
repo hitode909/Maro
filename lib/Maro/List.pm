@@ -1,4 +1,4 @@
-package MaRo::List;
+package Maro::List;
 use strict;
 use warnings;
 use base qw(List::Rubyish);
@@ -39,7 +39,7 @@ sub from_backend_list {
     my ($class, $list) = @_;
     $class->new($list)->map(sub {
          my $column = $_->column;
-         MaRo::Column->new({name => $column->name, value => $column->value, timestamp => $column->timestamp});
+         Maro::Column->new({name => $column->name, value => $column->value, timestamp => $column->timestamp});
     });
 }
 
