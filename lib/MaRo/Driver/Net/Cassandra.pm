@@ -7,6 +7,7 @@ use Net::Cassandra;
 use Carp 'croak';
 use UNIVERSAL::isa;
 use MaRo::Column;
+use MaRo::List;
 
 __PACKAGE__->mk_accessors(
     qw(client)
@@ -108,20 +109,9 @@ sub slice {
           );
     };
     die $@->why if $@;
-    [map {
+    MaRo::List->new([map {
         MaRo::Column->new({name => $_->column->name, value => $_->column->value, timestamp => $_->column->timestamp})
-    } @$what];
-}
-
-sub slice_as_hash {
-    my ($self, $arg) = @_;
-    my $values = $self->slice($arg);
-
-    my $result = {};
-    for (@$values) {
-        $result->{$_->name} = $_->value;
-    }
-    $result;
+    } @$what]);
 }
 
 sub delete {

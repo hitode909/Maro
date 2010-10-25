@@ -148,38 +148,37 @@ sub _slice : Test(11) {
     }
 
     my $list = $tl->slice(count => 3);
-    is scalar @$list, 3;
-    is_deeply [map {$_->value} @$list], [0, 1, 2], 'count';
+    is $list->length, 3;
+    is_deeply $list->map_value->to_a, [0, 1, 2], 'count';
     my $key2 = $list->[2]->name;
 
     $list = $tl->slice(start => $key2, count => 5);
-    is_deeply [map {$_->value} @$list], [2,3,4,5,6], 'count, start';
+    is_deeply $list->map_value->to_a, [2,3,4,5,6], 'count, start';
 
     my $key6 = $list->[4]->name;
     $list = $tl->slice(start => $key6, count => 100);
-    is_deeply [map {$_->value} @$list], [6,7,8,9,10], 'large count';
+    is_deeply $list->map_value->to_a, [6,7,8,9,10], 'large count';
 
     $list = $tl->slice(finish => $key2);
-    is_deeply [map {$_->value} @$list], [0,1,2], 'finish';
+    is_deeply $list->map_value->to_a, [0,1,2], 'finish';
 
     $list = $tl->slice(start => $key2, finish => $key6);
-    is_deeply [map {$_->value} @$list], [2,3,4,5,6], 'start, finish';
+    is_deeply $list->map_value->to_a, [2,3,4,5,6], 'start, finish';
 
     $list = $tl->slice(start => $key2, finish => $key6, count => 2);
-    is_deeply [map {$_->value} @$list], [2,3], 'start, finish, count';
+    is_deeply $list->map_value->to_a, [2,3], 'start, finish, count';
 
     $list = $tl->slice(reversed => 1);
-    is_deeply [map {$_->value} @$list], [10,9,8,7,6,5,4,3,2,1,0], 'reversed';
+    is_deeply $list->map_value->to_a, [10,9,8,7,6,5,4,3,2,1,0], 'reversed';
 
     $list = $tl->slice(reversed => 1, count => 3);
-    is_deeply [map {$_->value} @$list], [10,9,8], 'reversed, count';
+    is_deeply $list->map_value->to_a, [10,9,8], 'reversed, count';
 
     $list = $tl->slice(reversed => 1, count => 3, start => $key6);
-    is_deeply [map {$_->value} @$list], [6,5,4], 'reversed, count, start';
+    is_deeply $list->map_value->to_a, [6,5,4], 'reversed, count, start';
 
     $list = $tl->slice(reversed => 1, start => $key6, finish => $key2);
-    is_deeply [map {$_->value} @$list], [6,5,4,3,2], 'reversed, start, finish';
-
+    is_deeply $list->map_value->to_a, [6,5,4,3,2], 'reversed, start, finish';
 
     $tl->delete;
 }
