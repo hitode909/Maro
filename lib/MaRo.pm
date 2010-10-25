@@ -5,8 +5,10 @@ use base qw (Class::Data::Inheritable);
 use Carp;
 use UUID::Tiny;
 use utf8;
+use UNIVERSAL::require;
 
-__PACKAGE__->mk_classdata($_) for qw(db_object key_space column_family columns utf8_columns _is_list);
+__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family columns utf8_columns _is_list);
+__PACKAGE__->mk_classdata(default_driver_class => 'MaRo::Driver::Net::Cassandra');
 
 # public
 
@@ -135,15 +137,11 @@ sub param {
 }
 
 sub driver {
-    my ($self) = @_;
-    $self->_db_object->driver;
-}
-
-sub _db_object {
-    my ($self) = @_;
-    use Blog::DataBase;
-    $self->db_object->require or croak "Could not load driver ${self->db_object}: $@";
-    $self->db_object;
+    my ($class) = @_;
+    return $class->driver_object if $class->driver_object;
+    my $driver_class = $class->default_driver_class || $class->driver_class;
+    $driver_class->require or croak "Could not load driver ${class->driver_class}: $@";
+    $class->driver_object($driver_class->new($class->server_host || 'localhost', $class->server_port || 9160));
 }
 
 sub default_keys {

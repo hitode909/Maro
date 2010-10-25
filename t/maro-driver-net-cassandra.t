@@ -8,16 +8,14 @@ use lib file(__FILE__)->dir->subdir('lib')->stringify;
 
 use Test::More;
 use Test::Exception;
-use Blog::DataBase;
 use MaRo::Driver::Net::Cassandra;
 
-sub _new : Test(2) {
+sub _new : Test(1) {
     use_ok 'MaRo::Driver::Net::Cassandra';
-    use_ok 'Blog::DataBase';
 }
 
 sub _set_get : Test(7) {
-    my $driver = MaRo::Driver::Net::Cassandra->new('Blog::DataBase');
+    my $driver = MaRo::Driver::Net::Cassandra->new('localhost', 9160);
     my $key = rand;
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}, 'Shiga');
     my $column = $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'});
@@ -31,7 +29,7 @@ sub _set_get : Test(7) {
 
 sub _slice : Test(10) {
     my $key = rand;
-    my $driver = MaRo::Driver::Net::Cassandra->new('Blog::DataBase');
+    my $driver = MaRo::Driver::Net::Cassandra->new('localhost', 9160);
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}, 'Shiga');
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'age'},  21);
     ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'name'}, 'Inoue');
@@ -50,7 +48,7 @@ sub _slice : Test(10) {
 }
 
 sub _describe : Tests(2) {
-    my $driver = MaRo::Driver::Net::Cassandra->new('Blog::DataBase');
+    my $driver = MaRo::Driver::Net::Cassandra->new('localhost', 9160);
     my $desc = ($driver->describe_keyspace({key_space => 'MaRoBlog'}));
     ok $desc->{Entry};
     is $desc->{Entry}->{Type}, 'Standard';

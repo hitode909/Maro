@@ -16,11 +16,6 @@ sub _use : Test(2) {
     use_ok 'Blog::Entry';
 }
 
-sub _db_object : Test(1) {
-    my $database = Blog::Entry->db_object;
-    is $database, 'Blog::DataBase';
-}
-
 sub _key_space : Test(1) {
     my $key_space = Blog::Entry->key_space;
 

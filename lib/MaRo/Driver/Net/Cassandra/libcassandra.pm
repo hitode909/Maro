@@ -11,10 +11,10 @@ __PACKAGE__->mk_accessors(
     qw(client)
 );
 
+
 sub new {
-    my ($class, $database) = @_;
-    croak "database is required" unless $database;
-    my $client = Net::Cassandra::libcassandra::new($database->host, $database->port);
+    my ($class, $host, $port) = @_;
+    my $client = Net::Cassandra::libcassandra::new($host, $port);
     $class->SUPER::new({client => $client});
 }
 

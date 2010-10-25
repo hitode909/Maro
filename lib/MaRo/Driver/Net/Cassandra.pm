@@ -13,9 +13,8 @@ __PACKAGE__->mk_accessors(
 );
 
 sub new {
-    my ($class, $database) = @_;
-    croak "database is required" unless $database;
-    my $cassandra = Net::Cassandra->new( hostname => $database->host, port => $database->port );
+    my ($class, $host, $port) = @_;
+    my $cassandra = Net::Cassandra->new( hostname => $host, port => $port );
     my $client    = $cassandra->client;
     $class->SUPER::new({client => $client});
 }
