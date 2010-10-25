@@ -35,4 +35,12 @@ sub to_hash {
     $hash;
 }
 
+sub from_backend_list {
+    my ($class, $list) = @_;
+    $class->new($list)->map(sub {
+         my $column = $_->column;
+         MaRo::Column->new({name => $column->name, value => $column->value, timestamp => $column->timestamp});
+    });
+}
+
 1;

@@ -133,7 +133,11 @@ sub multiget_slice {
           );
     };
     die $@->why if $@;
-    $what;
+    my $result = {};
+    for (keys %$what) {
+        $result->{$_} = MaRo::List->from_backend_list($what->{$_});
+    }
+    $result;
 }
 
 sub delete {

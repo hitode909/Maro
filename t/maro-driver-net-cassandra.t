@@ -54,7 +54,7 @@ sub _describe : Tests(2) {
     is $desc->{Entry}->{Type}, 'Standard';
 }
 
-sub _multiget_slice : Test(4) {
+sub _multiget_slice : Test(7) {
     my $driver = MaRo::Driver::Net::Cassandra->new('localhost', 9160);
 
     my $multiget_empty = $driver->multiget_slice({key_space => 'Keyspace1', column_family => 'Standard2', keys => [qw{dummy1 dummy2 dummy3}], column_names => [qw{dummy1 dummy2}]});
@@ -71,7 +71,8 @@ sub _multiget_slice : Test(4) {
     my $multiget = $driver->multiget_slice({key_space => 'Keyspace1', column_family => 'Standard2', keys => [@keys], column_names => [qw{key index}]});
 
     for(@keys) {
-        ok $multiget->{$_};
+        isa_ok $multiget->{$_}, 'MaRo::List';
+        is $multiget->{$_}->to_hash->{key}, $_;
         $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $_});
     }
 }
