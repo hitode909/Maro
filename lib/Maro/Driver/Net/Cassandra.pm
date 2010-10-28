@@ -30,7 +30,7 @@ sub set {
             $arg->{key},
             Net::Cassandra::Backend::ColumnPath->new(
                 {
-                    column_family => $arg->{column_family}, column => $arg->{column} }
+                    column_family => $arg->{column_family}, super_column => $arg->{super_column}, column => $arg->{column} }
             ),
             $value,
             time,
@@ -51,7 +51,7 @@ sub get {
             $arg->{key},
             Net::Cassandra::Backend::ColumnPath->new(
                 {
-                    column_family => $arg->{column_family}, column => $arg->{column} }
+                    column_family => $arg->{column_family}, super_column => $arg->{super_column}, column => $arg->{column} }
             ),
             Net::Cassandra::Backend::ConsistencyLevel::QUORUM
           );
@@ -72,7 +72,9 @@ sub count {
             $arg->{key},
             Net::Cassandra::Backend::ColumnParent->new(
                 {
-                    column_family => $arg->{column_family} }
+                    column_family => $arg->{column_family},
+                    super_column => $arg->{super_column},
+                }
             ),
             Net::Cassandra::Backend::ConsistencyLevel::QUORUM
           );
@@ -90,7 +92,8 @@ sub slice {
             $arg->{key},
             Net::Cassandra::Backend::ColumnParent->new(
                 {
-                    column_family => $arg->{column_family}
+                    column_family => $arg->{column_family},
+                    super_column => $arg->{super_column},
                 }
             ),
             Net::Cassandra::Backend::SlicePredicate->new(
@@ -121,7 +124,9 @@ sub multiget_slice {
             $arg->{keys},
             Net::Cassandra::Backend::ColumnParent->new(
                 {
-                    column_family => $arg->{column_family} }
+                    column_family => $arg->{column_family},
+                    super_column => $arg->{super_column},
+                }
             ),
             Net::Cassandra::Backend::SlicePredicate->new(
                 {
@@ -146,7 +151,7 @@ sub delete {
             $arg->{key},
             Net::Cassandra::Backend::ColumnPath->new(
                 {
-                    column_family => $arg->{column_family}, column => $arg->{column} }
+                    column_family => $arg->{column_family}, super_column => $arg->{super_column}, column => $arg->{column} }
             ),
             time
         );

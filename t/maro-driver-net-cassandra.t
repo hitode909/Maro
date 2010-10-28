@@ -77,6 +77,48 @@ sub _multiget_slice : Test(7) {
     }
 }
 
+sub _super_column_get_set : Test(7) {
+    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
+    my $key = rand;
+    my $super_column = rand;
+    my $column_name = rand;
+    my $value = rand;
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => $column_name}, $value);
+    my $column = $driver->get({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => $column_name});
+    isa_ok $column, 'Maro::Column';
+    is $column->value, $value;
+    is $column->name,  $column_name;
+    ok time - $column->timestamp < 10;
+    is $driver->get({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => $column_name . '_'}), undef;
+    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => $column_name});
+}
+
+sub _super_column_slice : Test(10) {
+    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
+    my $key = rand;
+    my $super_column = rand;
+    my $column_name = rand;
+    my $value = rand;
+    warn "super column $super_column";
+    warn "key $key";
+
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => 'from'}, 'Shiga');
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => 'age'},  21);
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => 'name'}, 'Inoue');
+
+    my $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    is $user->{from}, 'Shiga';
+    is $user->{age}, 21;
+    is $user->{name}, 'Inoue';
+
+    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+
+    $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    is $user->{from}, undef;
+    is $user->{age}, undef;
+    is $user->{name}, undef;
+}
+
 __PACKAGE__->runtests;
 
 1;
