@@ -9,7 +9,7 @@ use UNIVERSAL::require;
 use DateTime;
 use Maro::Slice;
 
-__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list _reference_class super_column);
+__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list reference_class super_column);
 __PACKAGE__->mk_classdata(default_driver_class => 'Maro::Driver::Net::Cassandra');
 
 # public
@@ -76,22 +76,23 @@ sub slice {
 
 sub slice_as_reference {
     my ($self, %args) = @_;
-    croak "reference class not defined" unless $self->_reference_class;
-    $self->slice_as_list(%args)->map(sub { $self->_reference_class->new_by_key($_->value) });
+    croak "reference class not defined" unless $self->reference_class;
+    $self->slice_as_list(%args)->map(sub { $self->reference_class->new_by_key($_->value) });
 
 }
 
 sub add_reference_object {
     my ($self, $object) = @_;
-    croak "reference class not defined" unless $self->_reference_class;
-    croak "$object is not ${self->_reference_class}" unless $object->isa($self->_reference_class);
+    croak "reference class not defined" unless $self->reference_class;
+    croak "$object is not ${self->reference_class}" unless $object->isa($self->reference_class);
     $self->add_value($object->key);
 }
 
 sub reference_object {
-    my ($self) = @_;
-    die "reference class not defined" unless $self->_reference_class;
-    $self->_reference_class->find($self->value);
+    my ($self, $key) = @_;
+    die "reference class not defined" unless $self->reference_class;
+    $self->reference_class->require;
+    $self->reference_class->new_by_key($key);
 }
 
 sub add_value {
@@ -165,11 +166,6 @@ sub datetime_columns {
             }
         );
     }
-}
-
-sub reference_class {
-    my ($class, $reference_class) = @_;
-    $class->_reference_class($reference_class);
 }
 
 # private
