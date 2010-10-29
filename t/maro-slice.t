@@ -139,6 +139,52 @@ sub _reverse_follow_prev : Tests {
     $slice3->items;
 }
 
+sub _empty : Tests {
+    my $tl = Blog::UserTimeline->find(rand);
+
+    my $slice = $tl->slice(per_slice => 3);
+    for ($slice, $slice->followings, $slice->precedings) {
+        isa_ok $_, 'Maro::Slice';
+        isa_ok $_->items, 'Maro::List';
+        is $_->items->length, 0;
+        is $_->count, 0;
+        ok not $_->has_next;
+        ok not $_->has_prev;
+        isa_ok $_->followings, 'Maro::Slice';
+        isa_ok $_->precedings, 'Maro::Slice';
+    }
+}
+
+sub _end : Tests {
+    my $tl = Blog::UserTimeline->find(rand);
+
+    for(0..2) {
+        $tl->add_value($_);
+    }
+
+    my $slice = $tl->slice(per_slice => 3);
+    isa_ok $slice, 'Maro::Slice';
+    isa_ok $slice->items, 'Maro::List';
+    is_deeply $slice->items->map_value->to_a, [0, 1, 2];
+    is $slice->items->length, 3;
+    is $slice->count, 3;
+    ok not $slice->has_next;
+    ok not $slice->has_prev;
+    isa_ok $slice->followings, 'Maro::Slice';
+    isa_ok $slice->precedings, 'Maro::Slice';
+
+    for ($slice->followings, $slice->precedings) {
+        isa_ok $_, 'Maro::Slice';
+        isa_ok $_->items, 'Maro::List';
+        is $_->items->length, 0;
+        is $_->count, 3;
+        ok not $_->has_next;
+        ok not $_->has_prev;
+        isa_ok $_->followings, 'Maro::Slice';
+        isa_ok $_->precedings, 'Maro::Slice';
+    }
+}
+
 __PACKAGE__->runtests;
 
 1;

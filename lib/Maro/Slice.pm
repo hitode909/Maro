@@ -4,7 +4,7 @@ use warnings;
 use base qw( Class::Accessor::Fast );
 use Maro::List;
 
-__PACKAGE__->mk_accessors(qw(target_object per_slice reversed following_column preceding_column));
+__PACKAGE__->mk_accessors(qw(target_object per_slice reversed following_column preceding_column empty_slice));
 
 sub new {
     my $class = shift;
@@ -15,6 +15,7 @@ sub new {
 sub items {
     my ($self) = @_;
     return $self->{items} if $self->{items};
+    return Maro::List->new if $self->empty_slice;
 
     if (defined $self->following_column) {
         # 最初が指定されてるとき has_nextチェックのために1つ多めに取得する has_prevは明らかに1
@@ -67,22 +68,34 @@ sub count {
 
 sub followings {
     my ($self) = @_;
-    my $new_self = (ref $self)->new({
+    return $self->new_empty unless $self->has_next;
+
+    $self->{followings} = $self->new(
         target_object => $self->target_object,
         per_slice => $self->per_slice,
         following_column => $self->preceding_column,
         reversed => $self->reversed,
-    });
+    );
 }
 
 sub precedings {
     my ($self) = @_;
-    my $new_self = (ref $self)->new({
+    return $self->new_empty unless $self->has_prev;
+    $self->new(
         target_object => $self->target_object,
         per_slice => $self->per_slice,
         preceding_column => $self->following_column,
         reversed => $self->reversed,
-    });
+    );
+}
+
+# private
+sub new_empty {
+    my ($self) = @_;
+    $self->new(
+        target_object => $self->target_object,
+        empty_slice => 1
+    );
 }
 
 1;
