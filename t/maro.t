@@ -142,7 +142,7 @@ sub _updated_on : Test(1) {
     ok ((DateTime->now - $entry->updated_on)->delta_seconds < 10);
 }
 
-sub _slice : Test(11) {
+sub _slice : Test(12) {
     my $tl = Blog::UserTimeline->find(rand);
     for(0..10) {
         $tl->add_value($_);
@@ -162,6 +162,9 @@ sub _slice : Test(11) {
 
     $list = $tl->slice(finish => $key2);
     is_deeply $list->map_value->to_a, [0,1,2], 'finish';
+
+    $list = $tl->slice(start => $key6, count => 3, reversed => 1);
+    is_deeply $list->map_value->to_a, [6,5,4], 'finish(2)';
 
     $list = $tl->slice(start => $key2, finish => $key6);
     is_deeply $list->map_value->to_a, [2,3,4,5,6], 'start, finish';
