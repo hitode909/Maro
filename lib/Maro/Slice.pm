@@ -19,7 +19,7 @@ sub items {
     if (defined $self->following_column) {
         # 最初が指定されてるとき has_nextチェックのために1つ多めに取得する has_prevは明らかに1
         # gollowing_column=3, count=3のとき，[3,4,5,6]がきて，item=[3,4,5], previous_object=3, next_object=6
-        my $items = $self->target_object->slice(
+        my $items = $self->target_object->slice_as_list(
             start => $self->following_column,
             count => $self->per_slice + 1,
             reversed => $self->reversed,
@@ -29,7 +29,7 @@ sub items {
     } elsif (defined $self->preceding_column) {
         # preceding_column=6, count=3のとき，reverseするので，[6,5,4,3]がきて，item=[3,4,5], previous_object=3, next_object=6．
         # preceding_column自体はitemに入れない．
-        my $items = $self->target_object->slice(
+        my $items = $self->target_object->slice_as_list(
             start => $self->preceding_column,
             count => $self->per_slice + 1,
             reversed => $self->reversed ? 0 : 1,
@@ -38,7 +38,7 @@ sub items {
         $self->{items} = $items->slice(1, $items->length-1)->reverse;
     } else {
         # 先頭 count=3のとき，[0,1,2,3]がきて，next_object=3
-        my $items = $self->target_object->slice(
+        my $items = $self->target_object->slice_as_list(
             count => $self->per_slice + 1,
             reversed => $self->reversed,
         );

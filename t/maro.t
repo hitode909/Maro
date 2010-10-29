@@ -106,7 +106,7 @@ sub _user_timeline : Test(8) {
     is $tl->count, 5;
 
     for(0..4) {
-        is $tl->slice->[$_]->value, $_;
+        is $tl->slice_as_list->[$_]->value, $_;
     }
     $tl->delete;
 
@@ -142,46 +142,46 @@ sub _updated_on : Test(1) {
     ok ((DateTime->now - $entry->updated_on)->delta_seconds < 10);
 }
 
-sub _slice : Test(12) {
+sub _slice_as_list : Test(12) {
     my $tl = Blog::UserTimeline->find(rand);
     for(0..10) {
         $tl->add_value($_);
     }
 
-    my $list = $tl->slice(count => 3);
+    my $list = $tl->slice_as_list(count => 3);
     is $list->length, 3;
     is_deeply $list->map_value->to_a, [0, 1, 2], 'count';
     my $key2 = $list->[2]->name;
 
-    $list = $tl->slice(start => $key2, count => 5);
+    $list = $tl->slice_as_list(start => $key2, count => 5);
     is_deeply $list->map_value->to_a, [2,3,4,5,6], 'count, start';
 
     my $key6 = $list->[4]->name;
-    $list = $tl->slice(start => $key6, count => 100);
+    $list = $tl->slice_as_list(start => $key6, count => 100);
     is_deeply $list->map_value->to_a, [6,7,8,9,10], 'large count';
 
-    $list = $tl->slice(finish => $key2);
+    $list = $tl->slice_as_list(finish => $key2);
     is_deeply $list->map_value->to_a, [0,1,2], 'finish';
 
-    $list = $tl->slice(start => $key6, count => 3, reversed => 1);
+    $list = $tl->slice_as_list(start => $key6, count => 3, reversed => 1);
     is_deeply $list->map_value->to_a, [6,5,4], 'finish(2)';
 
-    $list = $tl->slice(start => $key2, finish => $key6);
+    $list = $tl->slice_as_list(start => $key2, finish => $key6);
     is_deeply $list->map_value->to_a, [2,3,4,5,6], 'start, finish';
 
-    $list = $tl->slice(start => $key2, finish => $key6, count => 2);
+    $list = $tl->slice_as_list(start => $key2, finish => $key6, count => 2);
     is_deeply $list->map_value->to_a, [2,3], 'start, finish, count';
 
-    $list = $tl->slice(reversed => 1);
+    $list = $tl->slice_as_list(reversed => 1);
     is_deeply $list->map_value->to_a, [10,9,8,7,6,5,4,3,2,1,0], 'reversed';
 
-    $list = $tl->slice(reversed => 1, count => 3);
+    $list = $tl->slice_as_list(reversed => 1, count => 3);
     is_deeply $list->map_value->to_a, [10,9,8], 'reversed, count';
 
-    $list = $tl->slice(reversed => 1, count => 3, start => $key6);
+    $list = $tl->slice_as_list(reversed => 1, count => 3, start => $key6);
     is_deeply $list->map_value->to_a, [6,5,4], 'reversed, count, start';
 
-    $list = $tl->slice(reversed => 1, start => $key6, finish => $key2);
+    $list = $tl->slice_as_list(reversed => 1, start => $key6, finish => $key2);
     is_deeply $list->map_value->to_a, [6,5,4,3,2], 'reversed, start, finish';
 
     $tl->delete;

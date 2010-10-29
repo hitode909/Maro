@@ -15,7 +15,7 @@ sub _follow : Tests {
         $tl->add_value($_);
     }
 
-    my $slice0 = $tl->slice2(per_slice => 3);
+    my $slice0 = $tl->slice(per_slice => 3);
     isa_ok $slice0, 'Maro::Slice';
     isa_ok $slice0->items, 'Maro::List';
     is_deeply $slice0->items->map_value->to_a, [0, 1, 2];
@@ -62,7 +62,7 @@ sub _follow_prev : Tests {
         $tl->add_value($_);
     }
 
-    my $slice0 = $tl->slice2(per_slice => 3);
+    my $slice0 = $tl->slice(per_slice => 3);
     $slice0->items;
     my $slice1 = $slice0->followings;
     $slice1->items;
@@ -80,7 +80,7 @@ sub _reverse_follow : Tests {
         $tl->add_value($_);
     }
 
-    my $slice0 = $tl->slice2(per_slice => 3, reversed => 1);
+    my $slice0 = $tl->slice(per_slice => 3, reversed => 1);
     isa_ok $slice0, 'Maro::Slice';
     isa_ok $slice0->items, 'Maro::List';
     is_deeply $slice0->items->map_value->to_a, [9, 8, 7];
@@ -127,7 +127,7 @@ sub _reverse_follow_prev : Tests {
         $tl->add_value($_);
     }
 
-    my $slice0 = $tl->slice2(per_slice => 3, reversed => 1);
+    my $slice0 = $tl->slice(per_slice => 3, reversed => 1);
     $slice0->items;
     my $slice1 = $slice0->followings;
     $slice1->items;

@@ -58,7 +58,7 @@ sub is_object {
     !$class->_is_list;
 }
 
-sub slice {
+sub slice_as_list {
     my ($self, %args) = @_;
     my $option = {$self->default_keys};
     $option->{count} = $args{count} if defined $args{count};
@@ -69,7 +69,7 @@ sub slice {
     $self->driver->slice($option);
 }
 
-sub slice2 {
+sub slice {
     my($self, %args) = @_;
     Maro::Slice->new({target_object => $self, (%args)});
 }
@@ -77,7 +77,7 @@ sub slice2 {
 sub slice_as_reference {
     my ($self, %args) = @_;
     croak "reference class not defined" unless $self->_reference_class;
-    $self->slice(%args)->map(sub { $self->_reference_class->new_by_key($_->value) });
+    $self->slice_as_list(%args)->map(sub { $self->_reference_class->new_by_key($_->value) });
 
 }
 
@@ -116,7 +116,7 @@ sub count {
 
 sub updated_on {
     my ($self) = @_;
-    DateTime->from_epoch(epoch => (reverse sort map {$_->timestamp} @{$self->slice})[0]);
+    DateTime->from_epoch(epoch => (reverse sort map {$_->timestamp} @{$self->slice_as_list})[0]);
 }
 
 sub inflate_column {
