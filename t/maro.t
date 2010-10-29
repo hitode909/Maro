@@ -187,6 +187,7 @@ sub _slice : Test(12) {
     $tl->delete;
 }
 
+
 sub _inflate_deflate : Tests {
     my $key = rand;
     Blog::Entry->inflate_column(
