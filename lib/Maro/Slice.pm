@@ -102,11 +102,13 @@ sub new_empty {
 
 sub map_if_needed {
     my ($self, $items) = @_;
-    if ($self->target_object->reference_class) {
-        $items->map(sub { $self->target_object->reference_object($_->value) });
-    } else {
-        $items;
+    if ($self->target_object->map_code) {
+        return $items->map($self->target_object->map_code);
     }
+    if ($self->target_object->reference_class) {
+        return $items->map(sub { $self->target_object->reference_object($_->value) });
+    }
+    return $items;
 }
 
 1;

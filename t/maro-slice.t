@@ -185,6 +185,23 @@ sub _end : Tests {
     }
 }
 
+sub _map_code : Test(2) {
+    my $tl = Blog::UserTimeline->find(rand);
+    for(0..9) {
+        $tl->add_value($_);
+    }
+
+    Blog::UserTimeline->map_code(sub { $_->value * 2; });
+
+    my $slice = $tl->slice(per_slice => 3);
+    is_deeply $slice->items->to_a, [0, 2, 4];
+
+    Blog::UserTimeline->map_code(undef);
+
+    $slice = $tl->slice(per_slice => 3);
+    is_deeply $slice->items->map_key->to_a, [0, 1, 2];
+}
+
 __PACKAGE__->runtests;
 
 1;

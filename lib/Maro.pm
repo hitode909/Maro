@@ -9,7 +9,7 @@ use UNIVERSAL::require;
 use DateTime;
 use Maro::Slice;
 
-__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list reference_class super_column);
+__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list reference_class super_column map_code);
 __PACKAGE__->mk_classdata(default_driver_class => 'Maro::Driver::Net::Cassandra');
 
 # public
