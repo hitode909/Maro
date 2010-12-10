@@ -202,6 +202,40 @@ sub _map_code : Test(2) {
     is_deeply $slice->items->map_key->to_a, [0, 1, 2];
 }
 
+sub _select_code : Test(3) {
+    my $tl = Blog::UserTimeline->find(rand);
+    for(0..12) {
+        $tl->add_value($_);
+    }
+
+    my $slice = $tl->slice(per_slice => 3, select_code => sub { $_->value % 2 == 0 });
+    is_deeply $slice->items->map_key->to_a, [0, 2, 4];
+
+    $slice = $slice->followings;
+    is_deeply $slice->items->map_key->to_a, [6,8,10];
+
+    $slice = $slice->followings;
+    is_deeply $slice->items->map_key->to_a, [12];
+
+}
+
+sub _select_code_precedings : Test(3) {
+    my $tl = Blog::UserTimeline->find(rand);
+    for(0..12) {
+        $tl->add_value($_);
+    }
+
+    my $slice = $tl->slice(per_slice => 3, select_code => sub { $_->value % 2 == 0 });
+    is_deeply $slice->items->map_key->to_a, [0, 2, 4];
+
+    $slice = $slice->followings;
+    is_deeply $slice->items->map_key->to_a, [6,8,10];
+
+    $slice = $slice->precedings;
+    is_deeply $slice->items->map_key->to_a, [0, 2, 4];
+
+}
+
 __PACKAGE__->runtests;
 
 1;
