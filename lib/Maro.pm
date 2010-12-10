@@ -98,7 +98,7 @@ sub reference_object {
 
 sub add_value {
     my ($self, $value) = @_;
-    $self->set_param(create_UUID(UUID_V1), $value);
+    $self->set_param(UUID::Tiny::create_uuid(UUID::Tiny::UUID_V1), $value);
 }
 
 sub key {
