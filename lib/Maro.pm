@@ -7,6 +7,7 @@ use UUID::Tiny;
 use utf8;
 use UNIVERSAL::require;
 use DateTime;
+use DateTime::Format::MySQL;
 use Maro::Slice;
 
 __PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list reference_class super_column map_code);
@@ -161,8 +162,18 @@ sub datetime_columns {
     foreach (@columns) {
         $class->inflate_column(
             $_ => {
-                deflate => sub { $_[0] && $_[0]->isa('DateTime') ? shift->epoch : 0 },
-                inflate => sub { $_[0] && DateTime->from_epoch(epoch => shift) },
+                deflate => sub {
+                    my $v = $_[0];
+                    return 0 unless $v;
+                    return $v->epoch if UNIVERSAL::isa($v, 'DateTime');
+                    eval {
+                        return DateTime::Format::MySQL->parse_datetime($v)->epoch;
+                    };
+                    return 0;
+                },
+                inflate => sub {
+                    $_[0] && DateTime->from_epoch(epoch => shift)
+                },
             }
         );
     }
