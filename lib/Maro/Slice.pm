@@ -26,9 +26,9 @@ sub items {
             count => $count,
             reversed => $self->reversed,
         );
-        my $selected_items = $self->select_if_needed($items);
+        my $selected_items = $self->select_if_needed($self->map_if_needed($items));
         $self->preceding_column($selected_items->last->name) if $selected_items->length == $self->per_slice + 1;
-        $self->{items} = $self->map_if_needed($selected_items->slice(0, $self->per_slice-1));
+        $self->{items} = $selected_items->slice(0, $self->per_slice-1);
     } elsif (defined $self->preceding_column) {
         # preceding_column=6, count=3のとき，reverseするので，[6,5,4,3]がきて，item=[3,4,5], previous_object=3, next_object=6．
         # preceding_column自体はitemに入れない．
@@ -37,19 +37,19 @@ sub items {
             count => $count,
             reversed => $self->reversed ? 0 : 1,
         );
-        my $selected_items = $self->select_if_needed($items);
+        my $selected_items = $self->select_if_needed($self->map_if_needed($items));
         # ここだけ破壊的
         $self->following_column($selected_items->shift->name) if $selected_items->length == $self->per_slice + 1;
-        $self->{items} = $self->map_if_needed($selected_items->slice(0, $self->per_slice-1)->reverse);
+        $self->{items} = $selected_items->slice(0, $self->per_slice-1)->reverse;
     } else {
         # 先頭 count=3のとき，[0,1,2,3]がきて，next_object=3
         my $items = $self->target_object->slice_as_list(
             count => $count,
             reversed => $self->reversed,
         );
-        my $selected_items = $self->select_if_needed($items);
+        my $selected_items = $self->select_if_needed($self->map_if_needed($items));
         $self->preceding_column($selected_items->last->name) if $selected_items->length == $self->per_slice + 1;
-        $self->{items} = $self->map_if_needed($selected_items->slice(0, $self->per_slice-1));
+        $self->{items} = $selected_items->slice(0, $self->per_slice-1);
     }
 }
 
@@ -134,21 +134,21 @@ sub select_if_needed {
             return;
         }
     });
-    return $selected_items;
+    return scalar $selected_items;
 }
 
 sub map_if_needed {
     my ($self, $items) = @_;
     if ($self->map_code) {
-        return $items->map($self->map_code);
+        return scalar $items->map($self->map_code);
     }
     if ($self->target_object->map_code) {
-        return $items->map($self->target_object->map_code);
+        return scalar $items->map($self->target_object->map_code);
     }
     if ($self->target_object->reference_class) {
-        return $items->map(sub { $self->target_object->reference_object($_->value) });
+        return scalar $items->map(sub { $self->target_object->reference_object($_->value) });
     }
-    return $items;
+    return scalar $items;
 }
 
 1;
