@@ -26,31 +26,60 @@ sub items {
             count => $count,
             reversed => $self->reversed,
         );
-        my $selected_items = $self->select_if_needed($self->map_if_needed($items));
-        $self->preceding_column($selected_items->last->name) if $selected_items->length == $self->per_slice + 1;
-        $self->{items} = $selected_items->slice(0, $self->per_slice-1);
+        # 先にmapしたらおかしくなる!!!!!!!同時にちまちま見る必要がございます!!!!!!!やばい!!!!!!!!!!!!!!!!!!!
+        $self->{items} = Maro::List->new;
+        $items->each(sub {
+             if ($self->{items}->length == $self->per_slice && !$self->preceding_column) {
+                 $self->preceding_column($_->name);
+             } elsif ($self->{items}->length < $self->per_slice) {
+                 my $item = $self->map_item($_);
+                 if ($self->select_code_ok($item)) {
+                     $self->{items}->push($item);
+                 }
+             }
+        });
     } elsif (defined $self->preceding_column) {
-        # preceding_column=6, count=3のとき，reverseするので，[6,5,4,3]がきて，item=[3,4,5], previous_object=3, next_object=6．
-        # preceding_column自体はitemに入れない．
+
+        # # preceding_column=6, count=3のとき，reverseするので，[6,5,4,3]がきて，item=[3,4,5], previous_object=3, next_object=6．
+        # # preceding_column自体はitemに入れない．
         my $items = $self->target_object->slice_as_list(
             start => $self->preceding_column,
             count => $count,
             reversed => $self->reversed ? 0 : 1,
         );
-        my $selected_items = $self->select_if_needed($self->map_if_needed($items));
-        # ここだけ破壊的
-        $self->following_column($selected_items->shift->name) if $selected_items->length == $self->per_slice + 1;
-        $self->{items} = $selected_items->slice(0, $self->per_slice-1)->reverse;
+        $self->{items} = Maro::List->new;
+        $items->each(sub {
+             if ($items->length > 0 && $self->{items}->length == 0 && !$self->following_column) {
+                 $self->following_column($_->name);
+             } elsif ($self->{items}->length < $self->per_slice) {
+                 my $item = $self->map_item($_);
+                 if ($self->select_code_ok($item)) {
+                     $self->{items}->unshift($item);
+                 }
+             }
+        });
+
     } else {
-        # 先頭 count=3のとき，[0,1,2,3]がきて，next_object=3
+        # # 先頭 count=3のとき，[0,1,2,3]がきて，next_object=3
         my $items = $self->target_object->slice_as_list(
             count => $count,
             reversed => $self->reversed,
         );
-        my $selected_items = $self->select_if_needed($self->map_if_needed($items));
-        $self->preceding_column($selected_items->last->name) if $selected_items->length == $self->per_slice + 1;
-        $self->{items} = $selected_items->slice(0, $self->per_slice-1);
+        $self->{items} = Maro::List->new;
+        $items->each(sub {
+             if ($self->{items}->length == $self->per_slice && !$self->preceding_column) {
+                 $self->preceding_column($_->name);
+             } elsif ($self->{items}->length < $self->per_slice) {
+                 my $item = $self->map_item($_);
+
+                 if ($self->select_code_ok($item)) {
+                     $self->{items}->push($item);
+                 }
+             }
+        });
+
     }
+    return $self->{items};
 }
 
 # 厳密にはfollowing_columnじゃない場合があるけど，使い方によると思う
@@ -75,6 +104,7 @@ sub count {
 
 sub followings {
     my ($self) = @_;
+    $self->items unless $self->preceding_column or exists $self->{items}; # preceding_column入ってないとき，items一回呼ばないとけない
     return $self->new_empty unless $self->has_next;
 
     $self->{followings} = $self->new(
@@ -88,6 +118,7 @@ sub followings {
 
 sub precedings {
     my ($self) = @_;
+    $self->items unless $self->following_column or exists $self->{items}; # gollowing_column入ってないとき，items一回呼ばないとけない
     return $self->new_empty unless $self->has_prev;
     $self->new(
         target_object => $self->target_object,
@@ -107,48 +138,25 @@ sub new_empty {
     );
 }
 
-# [select_codeを満たすitem * per_slice, 次のitem] を返す
-sub select_if_needed {
-    my ($self, $items, $precedings) = @_;
-    return $items unless $self->select_code;
+sub select_code_ok {
+    my ($self, $item) = @_;
 
-    my $selected_items = $items->new;
-    $items->each(sub {
-        if ($selected_items->length == $self->per_slice + 1) {
-            return;
-        }
-
-        if ($precedings) {
-            if ($precedings && $selected_items->length == 0) {
-                $selected_items->push($_);
-                return;
-            }
-        } else {
-            if ($selected_items->length == $self->per_slice) {
-                $selected_items->push($_);
-                return;
-            }
-        }
-        if ($self->select_code->($_)) {
-            $selected_items->push($_);
-            return;
-        }
-    });
-    return scalar $selected_items;
+    return 1 unless $self->select_code;
+    $self->select_code->($item)
 }
 
-sub map_if_needed {
-    my ($self, $items) = @_;
+sub map_item {
+    my ($self, $item)  = @_;
     if ($self->map_code) {
-        return scalar $items->map($self->map_code);
+        return $self->map_code->($item);
     }
     if ($self->target_object->map_code) {
-        return scalar $items->map($self->target_object->map_code);
+        return $self->target_object->map_code->($item);
     }
     if ($self->target_object->reference_class) {
-        return scalar $items->map(sub { $self->target_object->reference_object($_->value) });
+        return $self->target_object->reference_object($item->value);
     }
-    return scalar $items;
+    return $item;
 }
 
 1;
