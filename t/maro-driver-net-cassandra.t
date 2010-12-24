@@ -161,6 +161,12 @@ sub _super_column_slice_2 : Tests {
     is $slice->first->columns->first->name, 'age';
     is $slice->first->columns->first->value, 21;
 
+    $slice = $driver->slice({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column2});
+    isa_ok $slice, 'Maro::List';
+    isa_ok $slice->first, 'Maro::Column';
+    is $slice->length, 3;
+
+
     ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
     ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
 
