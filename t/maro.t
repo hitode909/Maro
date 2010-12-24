@@ -8,6 +8,7 @@ use lib file(__FILE__)->dir->subdir('lib')->stringify;
 use Test::More;
 use Maro;
 use Blog::Entry;
+use Blog::EntryWithSuperColumn;
 use Blog::UserTimeline;
 use Blog::User;
 use Encode;
@@ -79,6 +80,25 @@ sub _create_and_find : Test(4) {
     is $entry->{title}, 'poe';
     is $entry->{body}, 'poepoe';
     is $entry->{author}, 'poepoepoe';
+}
+
+sub _create_and_find_with_super_column : Tests {
+    my $key = rand;
+    my $super_column = rand;
+    my $entry = Blog::EntryWithSuperColumn->create(
+        key => $key,
+        super_column => $super_column,
+        title => 'abc',
+        body => 'abcabc',
+        author => 'abcabcabc',
+    );
+
+    $entry = Blog::EntryWithSuperColumn->find($super_column, $key);
+    is $entry->key, $key;
+    is $entry->super_column, $super_column;
+    is $entry->{title}, 'abc';
+    is $entry->{body}, 'abcabc';
+    is $entry->{author}, 'abcabcabc';
 }
 
 sub _create_with_not_defined_columns : Test(2) {

@@ -10,14 +10,18 @@ use DateTime;
 use DateTime::Format::MySQL;
 use Maro::Slice;
 
-__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list reference_class super_column map_code);
+__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list reference_class map_code);
 __PACKAGE__->mk_classdata(default_driver_class => 'Maro::Driver::Net::Cassandra');
 
 # public
 
 sub new_by_key {
-    my ($class, $key) = @_;
-    $class->new(key => $key);
+    my ($class, $key1, $key2) = @_;
+    if ($key2) {
+        $class->new(super_column => $key1, key => $key2);
+    } else {
+        $class->new(key => $key1);
+    }
 }
 
 sub new {
@@ -28,8 +32,10 @@ sub new {
 sub create {
     my ($class, %params) = @_;
     my $key = delete $params{key};
+    my $super_column = delete $params{super_column};
     croak "no key" unless defined $key;
-    my $self = $class->new_by_key($key);
+
+    my $self = $super_column ? $class->new_by_key($super_column, $key) : $class->new_by_key($key);
 
     for my $column (keys %params) {
         $self->$column($params{$column});
@@ -38,8 +44,8 @@ sub create {
 }
 
 sub find {
-    my ($class, $key) = @_;
-    my $self = $class->new_by_key($key);
+    my ($class, $key1, $key2) = @_;
+    my $self = $class->new_by_key($key1, $key2);
     $self->load_columns if $class->is_object;
     $self;
 }
@@ -104,6 +110,11 @@ sub add_value {
 sub key {
     my ($self) = @_;
     $self->{key};
+}
+
+sub super_column {
+    my ($self) = @_;
+    $self->{super_column};
 }
 
 sub delete {
