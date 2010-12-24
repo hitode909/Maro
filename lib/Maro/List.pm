@@ -2,6 +2,8 @@ package Maro::List;
 use strict;
 use warnings;
 use base qw(List::Rubyish);
+use Maro::Column;
+use Maro::SuperColumn;
 
 our $AUTOLOAD;
 
@@ -38,8 +40,18 @@ sub to_hash {
 sub from_backend_list {
     my ($class, $list) = @_;
     $class->new($list)->map(sub {
-         my $column = $_->column;
-         Maro::Column->new({name => $column->name, value => $column->value, timestamp => $column->timestamp});
+        my $item = $_;
+        if ($item->{column}) {
+            my $column = $item->column;
+            Maro::Column->new({name => $column->name, value => $column->value, timestamp => $column->timestamp});
+        } elsif ($item->{super_column}) {
+            my $super_column = $_->super_column;
+            my $columns = $class->from_backend_list($super_column->columns);
+            Maro::SuperColumn->new({name => $super_column->name, columns => scalar $columns});
+        } elsif ($item->{value}) {
+            my $column = $item;
+            Maro::Column->new({name => $column->name, value => $column->value, timestamp => $column->timestamp});
+        }
     });
 }
 

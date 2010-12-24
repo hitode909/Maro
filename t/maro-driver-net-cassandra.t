@@ -119,6 +119,38 @@ sub _super_column_slice : Test(10) {
     is $user->{name}, undef;
 }
 
+sub _super_column_slice_2 : Tests {
+    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
+    my $key = rand;
+    my $super_column1 = 'a' . rand;
+    my $super_column2 = 'b' . rand;
+    my $column_name = rand;
+    my $value = rand;
+
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column1, column => 'from'}, 'Shiga');
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column1, column => 'age'},  21);
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column1, column => 'name'}, 'Inoue');
+
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column2, column => 'from'}, 'Chiba');
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column2, column => 'age'},  33);
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column2, column => 'name'}, 'Yamada');
+
+    my $slice = $driver->slice({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
+    isa_ok $slice, 'Maro::List';
+    isa_ok $slice->first, 'Maro::SuperColumn';
+    is $slice->length, 2;
+    isa_ok $slice->first->columns->first, 'Maro::Column';
+    is $slice->first->columns->first->name, 'age';
+    is $slice->first->columns->first->value, 21;
+
+    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
+    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
+
+    $slice = $driver->slice({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
+    isa_ok $slice, 'Maro::List';
+    is $slice->length, 0;
+}
+
 __PACKAGE__->runtests;
 
 1;
