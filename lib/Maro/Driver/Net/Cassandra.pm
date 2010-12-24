@@ -6,6 +6,7 @@ use base qw(Maro::Driver);
 use Net::Cassandra;
 use Carp 'croak';
 use UNIVERSAL::isa;
+use Maro::SuperColumn;
 use Maro::Column;
 use Maro::List;
 
@@ -60,7 +61,13 @@ sub get {
         return if $@->isa('Net::Cassandra::Backend::NotFoundException');
         die $@->why if $@;
     }
-    Maro::Column->new({name => $what->column->name, value => $what->column->value, timestamp => $what->column->timestamp});
+    # TODO: メソッド作ってやらせる
+    if ($what->super_column) {
+        my $columns = Maro::List->new([map {Maro::Column->new({name => $_->name, value => $_->value, timestamp => $_->timestamp}) } @{$what->super_column->columns} ]);
+        Maro::SuperColumn->new({name => $what->super_column->name, columns => $columns});
+    } else {
+        Maro::Column->new({name => $what->column->name, value => $what->column->value, timestamp => $what->column->timestamp});
+    }
 }
 
 sub count {
@@ -173,9 +180,10 @@ sub describe_keyspace {
 
 sub validate_key_arg {
     my ($self, $arg) = @_;
-    foreach (qw{key_space key column_family column}) {
+    foreach (qw{key_space key column_family}) {
         defined $arg->{$_} or croak "$_ is required.";
     }
+    croak "column or super_column is required." unless defined $arg->{column} or defined $arg->{super_column};
     1;
 }
 

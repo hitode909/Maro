@@ -27,6 +27,24 @@ sub _set_get : Test(7) {
     ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'});
 }
 
+sub _set_get_super_column : Tests {
+    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
+    my $super_column = rand;
+    my $key = rand;
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', super_column => $super_column, key => $key, column => 'from'}, 'Shiga');
+    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', super_column => $super_column, key => $key, column => 'name'}, 'Sasaki');
+    my $got = $driver->get({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    isa_ok $got, 'Maro::SuperColumn';
+    is $got->name, $super_column;
+    isa_ok $got->columns, 'Maro::List';
+    is $got->columns->length, 2;
+    isa_ok $got->columns->first, 'Maro::Column';
+    is $got->columns->first->name, 'from';
+    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    $got = $driver->get({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    is $got, undef;
+}
+
 sub _slice : Test(10) {
     my $key = rand;
     my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
