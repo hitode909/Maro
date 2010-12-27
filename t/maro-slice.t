@@ -7,7 +7,6 @@ use lib file(__FILE__)->dir->parent->subdir('lib')->stringify;
 use lib file(__FILE__)->dir->subdir('lib')->stringify;
 use Test::More;
 use Maro;
-use UUID::Tiny;
 use Blog::EntryWithSuperColumn;
 use Blog::EntryTimeline;
 use Blog::UserTimeline;
@@ -64,9 +63,8 @@ sub _slice_normal_column_utf8 : Tests {
 sub _slice_super_column_timeuuid : Tests {
     my $key = rand;
     for (0..9) {
-        Blog::EntryTimeline->create(
+        Blog::EntryTimeline->create_now(
             key => $key,
-            super_column => UUID::Tiny::create_uuid(UUID::Tiny::UUID_V1),
             title => 'entry' . $_,
             body => 'body' . $_,
             author => 'author' . $_,

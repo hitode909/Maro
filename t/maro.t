@@ -9,6 +9,7 @@ use Test::More;
 use Maro;
 use Blog::Entry;
 use Blog::EntryWithSuperColumn;
+use Blog::EntryTimeline;
 use Blog::UserTimeline;
 use Blog::User;
 use Encode;
@@ -63,6 +64,20 @@ sub _create : Test(5) {
     is $entry->title, 'poe';
     is $entry->body, 'poepoe';
     is $entry->author, 'poepoepoe';
+}
+
+sub _create_now : Test(4) {
+    my $key = rand;
+    my $entry = Blog::EntryTimeline->create_now(
+        key => $key,
+        title => 'i',
+        body => 'iphone',
+    );
+    isa_ok $entry, 'Blog::EntryTimeline';
+
+    is length $entry->super_column, 16;
+    is $entry->title, 'i';
+    is $entry->body, 'iphone';
 }
 
 sub _create_and_find : Test(4) {

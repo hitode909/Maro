@@ -43,6 +43,11 @@ sub create {
     $self;
 }
 
+sub create_now {
+    my ($class, %params) = @_;
+    $class->create(%params, super_column => UUID::Tiny::create_uuid(UUID::Tiny::UUID_V1));
+}
+
 sub find {
     my ($class, $key1, $key2) = @_;
     my $self = $class->new_by_key($key1, $key2);
