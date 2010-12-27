@@ -4,7 +4,7 @@ use warnings;
 use base qw( Class::Accessor::Fast );
 use Maro::List;
 
-__PACKAGE__->mk_accessors(qw(model key super_column per_slice reversed following_column preceding_column empty_slice map_code select_code));
+__PACKAGE__->mk_accessors(qw(model key super_column per_slice reversed following_column preceding_column empty_slice map_code select_code is_top));
 
 sub new {
     my $class = shift;
@@ -19,7 +19,7 @@ sub items {
 
     my $count = $self->select_code ? $self->per_slice * 3 : $self->per_slice + 1;
     if (defined $self->following_column) {
-        # 最初が指定されてるとき has_nextチェックのために1つ多めに取得する has_prevは明らかに1
+        # 最初が指定されてるとき has_nextチェックのために1つ多めに取得する has_prev unless is_top
         # gollowing_column=3, count=3のとき，[3,4,5,6]がきて，item=[3,4,5], previous_object=3, next_object=6
         my $items = $self->model->slice_as_list(
             key => $self->key,
@@ -40,26 +40,38 @@ sub items {
                  }
              }
         });
+        $self->is_top($self->model->slice_as_list(
+            key => $self->key,
+            super_column => $self->super_column,
+            start => $self->following_column,
+            count => 2,
+            reversed => $self->reversed ? 0 : 1,
+        )->length < 2);
     } elsif (defined $self->preceding_column) {
 
-        # # preceding_column=6, count=3のとき，reverseするので，[6,5,4,3]がきて，item=[3,4,5], previous_object=3, next_object=6．
+        # # preceding_column=6, count=3のとき，reverseするので，[6,5,4,3,2]がきて，item=[3,4,5], previous_object=3, next_object=6, 2はis_topに使う
         # # preceding_column自体はitemに入れない．
         my $items = $self->model->slice_as_list(
             key => $self->key,
             super_column => $self->super_column,
             start => $self->preceding_column,
-            count => $count,
+            count => $count + 1,
             reversed => $self->reversed ? 0 : 1,
         );
         $self->{items} = Maro::List->new;
+        $self->is_top(1);
+        $items->shift;
         $items->each(sub {
-             if ($items->length > 0 && $self->{items}->length == 0 && !$self->following_column) {
-                 $self->following_column($_->isa('Maro::Column') ? $_->name : $_->key);
-             } elsif ($self->{items}->length < $self->per_slice) {
+             if ($self->{items}->length < $self->per_slice) {
                  my $item = $self->map_item($_);
                  if ($self->select_code_ok($item)) {
                      $self->{items}->unshift($item);
                  }
+                 if ($self->{items}->length  == $self->per_slice) {
+                     $self->following_column($_->isa('Maro::Column') ? $_->name : $_->key);
+                 }
+             } elsif ($self->{items}->length  == $self->per_slice) {
+                 $self->is_top(0);
              }
         });
 
@@ -83,6 +95,7 @@ sub items {
                  }
              }
         });
+        $self->is_top(1);
 
     }
     return $self->{items};
@@ -92,7 +105,7 @@ sub items {
 sub has_prev {
     my ($self) = @_;
     $self->items;
-    !!$self->following_column;
+    !!($self->following_column && !$self->is_top);
 }
 
 sub has_next {

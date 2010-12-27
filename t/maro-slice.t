@@ -204,15 +204,24 @@ sub _follow_prev : Tests {
     }
 
     my $slice0 = $tl->slice(per_slice => 3);
-    $slice0->items;
+    ok $slice0->has_next;
+    ok not $slice0->has_prev;
     my $slice1 = $slice0->followings;
-    $slice1->items;
+    ok $slice1->has_next;
+    ok $slice1->has_prev;
     is_deeply $slice1->precedings->items->map_value->to_a, $slice0->items->map_value->to_a;
+    ok not $slice1->precedings->has_prev;
+    ok $slice1->precedings->has_next;
     my $slice2 = $slice1->followings;
-    $slice2->items;
     is_deeply $slice2->precedings->items->map_value->to_a, $slice1->items->map_value->to_a;
+    ok $slice2->has_next;
+    ok $slice2->has_prev;
+    my $pp = $slice2->precedings->precedings;
+    ok not $pp->has_prev;
+    ok $slice2->precedings->precedings->has_next;
     my $slice3 = $slice2->followings;
-    $slice3->items;
+    ok not $slice3->has_next;
+    ok $slice3->has_prev;
 }
 
 sub _reverse_follow : Tests {
