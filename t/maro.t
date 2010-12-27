@@ -207,6 +207,30 @@ sub _slice_as_list : Test(12) {
     $tl->delete;
 }
 
+sub _slice_as_list_super_column : Tests {
+    my $key = rand;
+    for(1..9) {
+        Blog::EntryWithSuperColumn->create(
+            key => $key,
+            super_column => rand,
+            title => 'entry' . $_,
+            body => 'body' . $_,
+            author => 'author' . $_,
+        );
+    }
+
+    my $entries = Blog::EntryWithSuperColumn->slice_as_list(key => $key);
+    is $entries->length, 9;
+    my $entry = $entries->first;
+    isa_ok $entry, 'Blog::EntryWithSuperColumn';
+
+    $entry->title('title modified');
+
+    $entry = Blog::EntryWithSuperColumn->find($entry->super_column, $entry->key);
+    is $entry->title, 'title modified';
+}
+
+
 
 sub _inflate_deflate : Tests {
     my $key = rand;

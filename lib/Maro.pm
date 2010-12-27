@@ -10,7 +10,7 @@ use DateTime;
 use DateTime::Format::MySQL;
 use Maro::Slice;
 
-__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list reference_class map_code);
+__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list reference_class map_code _is_super_column _describe);
 __PACKAGE__->mk_classdata(default_driver_class => 'Maro::Driver::Net::Cassandra');
 
 # public
@@ -68,12 +68,26 @@ sub is_object {
 sub slice_as_list {
     my ($self, %args) = @_;
     my $option = {$self->default_keys};
+    $option->{key} = $args{key} if defined $args{key};
+    $option->{super_column} = $args{super_column} if defined $args{super_column};
     $option->{count} = $args{count} if defined $args{count};
     $option->{start} = $args{start} if defined $args{start};
     $option->{finish} = $args{finish} if defined $args{finish};
     $option->{reversed} = $args{reversed} if defined $args{reversed};
 
-    $self->driver->slice($option);
+    my $list = $self->driver->slice($option);
+    if ($self->is_super_column) {
+        $list->map(sub {
+            $self->new_from_super_column($_, $args{key});
+        });
+    } else {
+        $list;
+    }
+}
+
+sub new_from_super_column {
+    my ($class, $super_column, $slice_key) = @_;
+    my $self = $class->new(%{$super_column->columns->to_hash}, super_column => $slice_key, key => $super_column->name);
 }
 
 sub slice {
@@ -203,17 +217,18 @@ sub AUTOLOAD {
 sub is_super_column {
     my ($self) = @_;
 
-    if (exists $self->{is_super_column}) {
-        return $self->{is_super_column};
+    if (defined $self->_is_super_column) {
+        return $self->_is_super_column;
     }
 
     my $described = $self->driver->describe_keyspace({$self->default_keys});
-    $self->{is_super_column} = $self->describe->{Type} eq 'Super';
+    $self->_is_super_column($self->describe->{Type} eq 'Super');
 }
 
 sub describe {
     my ($self) = @_;
-    $self->{__describe} ||= $self->driver->describe_keyspace({$self->default_keys})->{$self->column_family};
+    return $self->_describe if defined $self->_describe;
+    $self->_describe($self->driver->describe_keyspace({$self->default_keys})->{$self->column_family});
 }
 
 sub load_columns {
@@ -262,12 +277,19 @@ sub driver {
 
 sub default_keys {
     my ($self) = @_;
-    return (
-        key => $self->key,
-        column_family => $self->column_family,
-        key_space => $self->key_space,
-        super_column => $self->super_column,
-    );
+    if (ref $self) {
+        return (
+            key => $self->key,
+            column_family => $self->column_family,
+            key_space => $self->key_space,
+            super_column => $self->super_column,
+        );
+    } else {
+        return (
+            column_family => $self->column_family,
+            key_space => $self->key_space,
+        );
+    }
 }
 
 sub is_utf8_column {
