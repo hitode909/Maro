@@ -41,14 +41,14 @@ sub from_backend_list {
     my ($class, $list) = @_;
     $class->new($list)->map(sub {
         my $item = $_;
-        if ($item->{column}) {
+        if (defined $item->{column}) {
             my $column = $item->column;
             Maro::Column->new({name => $column->name, value => $column->value, timestamp => $column->timestamp});
-        } elsif ($item->{super_column}) {
+        } elsif (defined $item->{super_column}) {
             my $super_column = $_->super_column;
             my $columns = $class->from_backend_list($super_column->columns);
             Maro::SuperColumn->new({name => $super_column->name, columns => scalar $columns});
-        } elsif ($item->{value}) {
+        } elsif (defined $item->{value}) {
             my $column = $item;
             Maro::Column->new({name => $column->name, value => $column->value, timestamp => $column->timestamp});
         }

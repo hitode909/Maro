@@ -294,7 +294,7 @@ sub is_utf8_column {
 
 sub get_param {
     my ($self, $column) = @_;
-    return $self->{$column} if $self->{$column};
+    return $self->{$column} if exists $self->{$column};
     my $co = $self->driver->get({
         column => $column,
         $self->default_keys
