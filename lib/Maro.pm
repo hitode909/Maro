@@ -74,7 +74,6 @@ sub slice_as_list {
     $option->{start} = $args{start} if defined $args{start};
     $option->{finish} = $args{finish} if defined $args{finish};
     $option->{reversed} = $args{reversed} if defined $args{reversed};
-
     my $list = $self->driver->slice($option);
     if ($self->is_super_column) {
         $list->map(sub {
@@ -91,8 +90,14 @@ sub new_from_super_column {
 }
 
 sub slice {
-    my($self, %args) = @_;
-    Maro::Slice->new({target_object => $self, (%args)});
+    my($self_or_class, %args) = @_;
+    my $class = ref $self_or_class || $self_or_class;
+    my $args = {model => $class, (%args)};
+    if (ref $self_or_class) {
+        $args->{key} = $self_or_class->key;
+        $args->{super_column} = $self_or_class->super_column;
+    }
+    Maro::Slice->new($args);
 }
 
 sub slice_as_reference {
@@ -137,8 +142,11 @@ sub delete {
 }
 
 sub count {
-    my ($self) = @_;
-    $self->driver->count({$self->default_keys});
+    my ($self, %args) = @_;
+    my $option = {$self->default_keys};
+    $option->{key} = $args{key} if defined $args{key};
+    $option->{super_column} = $args{super_column} if defined $args{super_column};
+    $self->driver->count($option);
 }
 
 sub updated_on {

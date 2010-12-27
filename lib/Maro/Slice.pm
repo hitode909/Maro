@@ -4,7 +4,7 @@ use warnings;
 use base qw( Class::Accessor::Fast );
 use Maro::List;
 
-__PACKAGE__->mk_accessors(qw(target_object per_slice reversed following_column preceding_column empty_slice map_code select_code));
+__PACKAGE__->mk_accessors(qw(model key super_column per_slice reversed following_column preceding_column empty_slice map_code select_code));
 
 sub new {
     my $class = shift;
@@ -21,7 +21,9 @@ sub items {
     if (defined $self->following_column) {
         # 最初が指定されてるとき has_nextチェックのために1つ多めに取得する has_prevは明らかに1
         # gollowing_column=3, count=3のとき，[3,4,5,6]がきて，item=[3,4,5], previous_object=3, next_object=6
-        my $items = $self->target_object->slice_as_list(
+        my $items = $self->model->slice_as_list(
+            key => $self->key,
+            super_column => $self->super_column,
             start => $self->following_column,
             count => $count,
             reversed => $self->reversed,
@@ -30,7 +32,7 @@ sub items {
         $self->{items} = Maro::List->new;
         $items->each(sub {
              if ($self->{items}->length == $self->per_slice && !$self->preceding_column) {
-                 $self->preceding_column($_->name);
+                 $self->preceding_column($_->isa('Maro::Column') ? $_->name : $_->key);
              } elsif ($self->{items}->length < $self->per_slice) {
                  my $item = $self->map_item($_);
                  if ($self->select_code_ok($item)) {
@@ -42,7 +44,9 @@ sub items {
 
         # # preceding_column=6, count=3のとき，reverseするので，[6,5,4,3]がきて，item=[3,4,5], previous_object=3, next_object=6．
         # # preceding_column自体はitemに入れない．
-        my $items = $self->target_object->slice_as_list(
+        my $items = $self->model->slice_as_list(
+            key => $self->key,
+            super_column => $self->super_column,
             start => $self->preceding_column,
             count => $count,
             reversed => $self->reversed ? 0 : 1,
@@ -50,7 +54,7 @@ sub items {
         $self->{items} = Maro::List->new;
         $items->each(sub {
              if ($items->length > 0 && $self->{items}->length == 0 && !$self->following_column) {
-                 $self->following_column($_->name);
+                 $self->following_column($_->isa('Maro::Column') ? $_->name : $_->key);
              } elsif ($self->{items}->length < $self->per_slice) {
                  my $item = $self->map_item($_);
                  if ($self->select_code_ok($item)) {
@@ -61,14 +65,16 @@ sub items {
 
     } else {
         # # 先頭 count=3のとき，[0,1,2,3]がきて，next_object=3
-        my $items = $self->target_object->slice_as_list(
+        my $items = $self->model->slice_as_list(
+            key => $self->key,
+            super_column => $self->super_column,
             count => $count,
             reversed => $self->reversed,
         );
         $self->{items} = Maro::List->new;
         $items->each(sub {
              if ($self->{items}->length == $self->per_slice && !$self->preceding_column) {
-                 $self->preceding_column($_->name);
+                 $self->preceding_column($_->isa('Maro::Column') ? $_->name : $_->key);
              } elsif ($self->{items}->length < $self->per_slice) {
                  my $item = $self->map_item($_);
 
@@ -99,7 +105,10 @@ sub count {
     my ($self) = @_;
     return $self->{count} if exists $self->{count};
 
-    $self->{count} = $self->target_object->count;
+    $self->{count} = $self->model->count(
+        key => $self->key,
+        super_column => $self->super_column
+    );
 }
 
 sub followings {
@@ -108,7 +117,9 @@ sub followings {
     return $self->new_empty unless $self->has_next;
 
     $self->{followings} = $self->new(
-        target_object => $self->target_object,
+        model => $self->model,
+        key => $self->key,
+        super_column => $self->super_column,
         per_slice => $self->per_slice,
         following_column => $self->preceding_column,
         reversed => $self->reversed,
@@ -121,7 +132,9 @@ sub precedings {
     $self->items unless $self->following_column or exists $self->{items}; # gollowing_column入ってないとき，items一回呼ばないとけない
     return $self->new_empty unless $self->has_prev;
     $self->new(
-        target_object => $self->target_object,
+        key => $self->key,
+        super_column => $self->super_column,
+        model => $self->model,
         per_slice => $self->per_slice,
         preceding_column => $self->following_column,
         reversed => $self->reversed,
@@ -133,7 +146,9 @@ sub precedings {
 sub new_empty {
     my ($self) = @_;
     $self->new(
-        target_object => $self->target_object,
+        key => $self->key,
+        super_column => $self->super_column,
+        model => $self->model,
         empty_slice => 1
     );
 }
@@ -150,11 +165,11 @@ sub map_item {
     if ($self->map_code) {
         return $self->map_code->($item);
     }
-    if ($self->target_object->map_code) {
-        return $self->target_object->map_code->($item);
+    if ($self->model->map_code) {
+        return $self->model->map_code->($item);
     }
-    if ($self->target_object->reference_class) {
-        return $self->target_object->reference_object($item->value);
+    if ($self->model->reference_class) {
+        return $self->model->reference_object($item->value);
     }
     return $item;
 }

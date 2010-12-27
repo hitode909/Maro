@@ -95,8 +95,8 @@ sub slice {
     my $what;
     eval {
         $what = $self->client->get_slice(
-            $arg->{key_space},
-            $arg->{key},
+            $arg->{key_space} || '',
+            $arg->{key} || '',
             Net::Cassandra::Backend::ColumnParent->new(
                 {
                     column_family => $arg->{column_family},

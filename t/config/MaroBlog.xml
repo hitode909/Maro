@@ -19,8 +19,8 @@
                 />
   <ColumnFamily Name="EntryTimeline"
                 ColumnType="Super"
-                CompareWith="TimeUUIDType"
-                CompareSubcolumnsWith="UTF8Type"
+                CompareWith="UTF8Type"
+                CompareSubcolumnsWith="TimeUUIDType"
                 />
 
 

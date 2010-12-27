@@ -7,7 +7,153 @@ use lib file(__FILE__)->dir->parent->subdir('lib')->stringify;
 use lib file(__FILE__)->dir->subdir('lib')->stringify;
 use Test::More;
 use Maro;
+use UUID::Tiny;
+use Blog::EntryWithSuperColumn;
+use Blog::EntryTimeline;
 use Blog::UserTimeline;
+use Blog::Entry;
+
+sub _slice_normal_column_utf8 : Tests {
+    my $key = rand;
+    my $entry = Blog::Entry->create(
+        key => $key,
+    );
+
+    for (0..9) {
+        my $method = 'body' . $_;
+        $entry->$method($_);
+    }
+
+    my $slice0 = Blog::Entry->slice(key => $key, per_slice => 3);
+    isa_ok $slice0, 'Maro::Slice';
+    isa_ok $slice0->items, 'Maro::List';
+    is $slice0->items->length, 3;
+    is $slice0->items->first->name, 'body0';
+    is $slice0->count, 10;
+    ok $slice0->has_next;
+    ok not $slice0->has_prev;
+
+    my $slice1 = $slice0->followings;
+    isa_ok $slice1, 'Maro::Slice';
+    isa_ok $slice1->items, 'Maro::List';
+    is $slice1->items->length, 3;
+    is $slice1->items->first->name, 'body3';
+    ok $slice1->has_next;
+    ok $slice1->has_prev;
+
+    my $slice2 = $slice1->followings;
+    isa_ok $slice2, 'Maro::Slice';
+    isa_ok $slice2->items, 'Maro::List';
+    is $slice2->items->length, 3;
+    is $slice2->items->first->name, 'body6';
+    ok $slice2->has_next;
+    ok $slice2->has_prev;
+
+    my $slice3 = $slice2->followings;
+    isa_ok $slice3, 'Maro::Slice';
+    isa_ok $slice3->items, 'Maro::List';
+    is $slice3->items->length, 1;
+    is $slice3->items->first->name, 'body9';
+    is $slice3->per_slice, 3;
+    is $slice3->count, 10;
+    ok not  $slice3->has_next;
+    ok $slice3->has_prev;
+
+}
+
+sub _slice_super_column_timeuuid : Tests {
+    my $key = rand;
+    for (0..9) {
+        Blog::EntryTimeline->create(
+            key => $key,
+            super_column => UUID::Tiny::create_uuid(UUID::Tiny::UUID_V1),
+            title => 'entry' . $_,
+            body => 'body' . $_,
+            author => 'author' . $_,
+        );
+    }
+    my $slice0 = Blog::EntryTimeline->slice(key => $key, per_slice => 3);
+    isa_ok $slice0, 'Maro::Slice';
+    isa_ok $slice0->items, 'Maro::List';
+    is $slice0->items->length, 3;
+    is $slice0->items->first->title, 'entry0';
+    is $slice0->count, 10;
+    ok $slice0->has_next;
+    ok not $slice0->has_prev;
+
+    my $slice1 = $slice0->followings;
+    isa_ok $slice1, 'Maro::Slice';
+    isa_ok $slice1->items, 'Maro::List';
+    is $slice1->items->length, 3;
+    is $slice1->items->first->title, 'entry3';
+    ok $slice1->has_next;
+    ok $slice1->has_prev;
+
+    my $slice2 = $slice1->followings;
+    isa_ok $slice2, 'Maro::Slice';
+    isa_ok $slice2->items, 'Maro::List';
+    is $slice2->items->length, 3;
+    is $slice2->items->first->title, 'entry6';
+    ok $slice2->has_next;
+    ok $slice2->has_prev;
+
+    my $slice3 = $slice2->followings;
+    isa_ok $slice3, 'Maro::Slice';
+    isa_ok $slice3->items, 'Maro::List';
+    is $slice3->items->length, 1;
+    is $slice2->items->first->title, 'entry6';
+    is $slice3->per_slice, 3;
+    is $slice3->count, 10;
+    ok not  $slice3->has_next;
+    ok $slice3->has_prev;
+}
+
+sub _slice_super_column_utf8 : Tests {
+    my $key = rand;
+    for (0..9) {
+        my $d = Blog::EntryWithSuperColumn->create(
+            key => $key,
+            super_column => 'super_column' . $_,
+            title => 'entry' . $_,
+            body => 'body' . $_,
+            author => 'author' . $_,
+        );
+    }
+    my $slice0 = Blog::EntryWithSuperColumn->slice(key => $key, per_slice => 3);
+    isa_ok $slice0, 'Maro::Slice';
+    isa_ok $slice0->items, 'Maro::List';
+    is $slice0->items->length, 3;
+    is $slice0->items->first->title, 'entry0';
+    is $slice0->count, 10;
+    ok $slice0->has_next;
+    ok not $slice0->has_prev;
+
+    my $slice1 = $slice0->followings;
+    isa_ok $slice1, 'Maro::Slice';
+    isa_ok $slice1->items, 'Maro::List';
+    is $slice1->items->length, 3;
+    is $slice1->items->first->title, 'entry3';
+    ok $slice1->has_next;
+    ok $slice1->has_prev;
+
+    my $slice2 = $slice1->followings;
+    isa_ok $slice2, 'Maro::Slice';
+    isa_ok $slice2->items, 'Maro::List';
+    is $slice2->items->length, 3;
+    is $slice2->items->first->title, 'entry6';
+    ok $slice2->has_next;
+    ok $slice2->has_prev;
+
+    my $slice3 = $slice2->followings;
+    isa_ok $slice3, 'Maro::Slice';
+    isa_ok $slice3->items, 'Maro::List';
+    is $slice3->items->length, 1;
+    is $slice2->items->first->title, 'entry6';
+    is $slice3->per_slice, 3;
+    is $slice3->count, 10;
+    ok not  $slice3->has_next;
+    ok $slice3->has_prev;
+}
 
 sub _follow : Tests {
     my $tl = Blog::UserTimeline->find(rand);
