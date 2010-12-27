@@ -7,32 +7,28 @@ use lib file(__FILE__)->dir->parent->subdir('lib')->stringify;
 use lib file(__FILE__)->dir->subdir('lib')->stringify;
 use Test::More;
 use Maro;
-use Blog::Entry;
-use Blog::EntryWithSuperColumn;
-use Blog::EntryTimeline;
-use Blog::UserTimeline;
-use Blog::User;
+use TestModel;
 use Encode;
 
 sub _use : Test(2) {
     use_ok 'Maro';
-    use_ok 'Blog::Entry';
+    use_ok 'TestModel';
 }
 
 sub _key_space : Test(1) {
-    my $key_space = Blog::Entry->key_space;
+    my $key_space = TestModel::StandardUTF8->key_space;
 
-    is $key_space, 'MaroBlog';
+    is $key_space, 'MaroTest';
 }
 
 sub _column_family : Test(1) {
-    my $column_family = Blog::Entry->column_family;
+    my $column_family = TestModel::StandardUTF8->column_family;
 
-    is $column_family, 'Entry';
+    is $column_family, 'StandardUTF8';
 }
 
 sub _set_param : Test(1) {
-    my $entry = Blog::Entry->new_by_key('got-new-guitar');
+    my $entry = TestModel::StandardUTF8->new_by_key('got-new-guitar');
     $entry->body('my guitar is very cool');
     $entry->author('hitodekun');
     is $entry->author, 'hitodekun';
@@ -40,7 +36,7 @@ sub _set_param : Test(1) {
 
 sub _new_and_set : Test(3) {
     my $key = rand;
-    my $entry = Blog::Entry->new_by_key(rand);
+    my $entry = TestModel::StandardUTF8->new_by_key(rand);
     $entry->title('got new guitar');
     $entry->body('my guitar is very cool');
     $entry->author('hitodekun');
@@ -52,13 +48,13 @@ sub _new_and_set : Test(3) {
 
 sub _create : Test(5) {
     my $key = rand;
-    my $entry = Blog::Entry->create(
+    my $entry = TestModel::StandardUTF8->create(
         key => $key,
         title => 'poe',
         body => 'poepoe',
         author => 'poepoepoe',
     );
-    isa_ok $entry, 'Blog::Entry';
+    isa_ok $entry, 'TestModel::StandardUTF8';
 
     is $entry->key, $key;
     is $entry->title, 'poe';
@@ -68,12 +64,12 @@ sub _create : Test(5) {
 
 sub _create_now : Test(4) {
     my $key = rand;
-    my $entry = Blog::EntryTimeline->create_now(
+    my $entry = TestModel::SuperTime->create_now(
         key => $key,
         title => 'i',
         body => 'iphone',
     );
-    isa_ok $entry, 'Blog::EntryTimeline';
+    isa_ok $entry, 'TestModel::SuperTime';
 
     is length $entry->super_column, 16;
     is $entry->title, 'i';
@@ -82,14 +78,14 @@ sub _create_now : Test(4) {
 
 sub _create_and_find : Test(4) {
     my $key = rand;
-    my $entry = Blog::Entry->create(
+    my $entry = TestModel::StandardUTF8->create(
         key => $key,
         title => 'poe',
         body => 'poepoe',
         author => 'poepoepoe',
     );
 
-    $entry = Blog::Entry->find($key);
+    $entry = TestModel::StandardUTF8->find($key);
 
     is $entry->key, $key;
     is $entry->{title}, 'poe';
@@ -100,7 +96,7 @@ sub _create_and_find : Test(4) {
 sub _create_and_find_with_super_column : Tests {
     my $key = rand;
     my $super_column = rand;
-    my $entry = Blog::EntryWithSuperColumn->create(
+    my $entry = TestModel::SuperUTF8->create(
         key => $key,
         super_column => $super_column,
         title => 'abc',
@@ -108,7 +104,7 @@ sub _create_and_find_with_super_column : Tests {
         author => 'abcabcabc',
     );
 
-    $entry = Blog::EntryWithSuperColumn->find($super_column, $key);
+    $entry = TestModel::SuperUTF8->find($super_column, $key);
     is $entry->key, $key;
     is $entry->super_column, $super_column;
     is $entry->{title}, 'abc';
@@ -118,7 +114,7 @@ sub _create_and_find_with_super_column : Tests {
 
 sub _create_with_not_defined_columns : Test(2) {
     my $key = rand;
-    my $entry = Blog::Entry->create(
+    my $entry = TestModel::StandardUTF8->create(
         key => $key,
         category => 'fishing',
         title => 'fish',
@@ -128,12 +124,12 @@ sub _create_with_not_defined_columns : Test(2) {
 
     is $entry->category, 'fishing';
 
-    $entry = Blog::Entry->find($key);
+    $entry = TestModel::StandardUTF8->find($key);
     is $entry->{category}, 'fishing';
 }
 
 sub _user_timeline : Test(8) {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
     ok $tl;
     for(0..4) {
         $tl->add_value($_);
@@ -152,33 +148,35 @@ sub _utf8_columns : Test(4) {
     my $key = rand;
     my $title = '社長日記';
     my $body = 'おなかすいた';
-    my $entry = Blog::Entry->create(
+    TestModel::StandardUTF8->utf8_columns([qw(title body)]);
+    my $entry = TestModel::StandardUTF8->create(
         key => $key,
         title => $title,
         body => $body,
         url => 'http://example.com',
     );
 
-    $entry = Blog::Entry->find($key);
+    $entry = TestModel::StandardUTF8->find($key);
     ok $entry;
     ok Encode::is_utf8($entry->title), 'title is utf8';
     ok Encode::is_utf8($entry->body), 'body is utf8';
     ok !Encode::is_utf8($entry->url), 'url is not utf8';
+    TestModel::StandardUTF8->utf8_columns([]);
 }
 
 sub _updated_on : Test(1) {
     my $key = rand;
-    my $entry = Blog::Entry->create(
+    my $entry = TestModel::StandardUTF8->create(
         key => $key,
         title => 'よろしく',
     );
 
-    $entry = Blog::Entry->find($key);
+    $entry = TestModel::StandardUTF8->find($key);
     ok ((DateTime->now - $entry->updated_on)->delta_seconds < 10);
 }
 
 sub _slice_as_list : Test(12) {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
     for(0..10) {
         $tl->add_value($_);
     }
@@ -225,7 +223,7 @@ sub _slice_as_list : Test(12) {
 sub _slice_as_list_super_column : Tests {
     my $key = rand;
     for(1..9) {
-        Blog::EntryWithSuperColumn->create(
+        TestModel::SuperUTF8->create(
             key => $key,
             super_column => rand,
             title => 'entry' . $_,
@@ -234,48 +232,46 @@ sub _slice_as_list_super_column : Tests {
         );
     }
 
-    my $entries = Blog::EntryWithSuperColumn->slice_as_list(key => $key);
+    my $entries = TestModel::SuperUTF8->slice_as_list(key => $key);
     is $entries->length, 9;
     my $entry = $entries->first;
-    isa_ok $entry, 'Blog::EntryWithSuperColumn';
+    isa_ok $entry, 'TestModel::SuperUTF8';
 
     $entry->title('title modified');
 
-    $entry = Blog::EntryWithSuperColumn->find($entry->super_column, $entry->key);
+    $entry = TestModel::SuperUTF8->find($entry->super_column, $entry->key);
     is $entry->title, 'title modified';
 }
 
-
-
 sub _inflate_deflate : Tests {
     my $key = rand;
-    Blog::Entry->inflate_column(
+    TestModel::StandardUTF8->inflate_column(
         michael => {
             deflate => sub { $_[0] . ' is' },
             inflate => sub { $_[0] . ' it.' },
         }
     );
 
-    my $entry = Blog::Entry->create(
+    my $entry = TestModel::StandardUTF8->create(
         key => $key,
         michael => 'This',
     );
 
-    $entry = Blog::Entry->find($key);
+    $entry = TestModel::StandardUTF8->find($key);
     is $entry->michael, 'This is it.';
 }
 
 sub _datetime_columns : Tests {
     my $key = rand;
-    Blog::Entry->datetime_columns(qw/created_on/);
+    TestModel::StandardUTF8->datetime_columns(qw/created_on/);
 
     my $now = DateTime->now;
-    my $entry = Blog::Entry->create(
+    my $entry = TestModel::StandardUTF8->create(
         key => $key,
         created_on => $now,
         michael => 'hello',
     );
-    $entry = Blog::Entry->find($key);
+    $entry = TestModel::StandardUTF8->find($key);
     isa_ok $entry->created_on, 'DateTime';
     is $entry->created_on->epoch, $now->epoch;
 }

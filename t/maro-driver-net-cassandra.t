@@ -17,49 +17,49 @@ sub _new : Test(1) {
 sub _set_get : Test(7) {
     my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
     my $key = rand;
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}, 'Shiga');
-    my $column = $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'});
+    ok $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'from'}, 'Shiga');
+    my $column = $driver->get({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'from'});
     isa_ok $column, 'Maro::Column';
     is $column->value, 'Shiga';
     is $column->name, 'from';
     ok time - $column->timestamp < 10;
-    is $driver->get({key_space => 'Keyspace1', column_family => 'Standard2', parent_key => $key, key => 'hitode', column => '___'}), undef;
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'});
+    is $driver->get({key_space => 'MaroTest', column_family => 'StandardUTF8', parent_key => $key, key => 'hitode', column => '___'}), undef;
+    ok $driver->delete({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'from'});
 }
 
 sub _set_get_super_column : Tests {
     my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
     my $super_column = rand;
     my $key = rand;
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', super_column => $super_column, key => $key, column => 'from'}, 'Shiga');
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', super_column => $super_column, key => $key, column => 'name'}, 'Sasaki');
-    my $got = $driver->get({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', super_column => $super_column, key => $key, column => 'from'}, 'Shiga');
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', super_column => $super_column, key => $key, column => 'name'}, 'Sasaki');
+    my $got = $driver->get({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column});
     isa_ok $got, 'Maro::SuperColumn';
     is $got->name, $super_column;
     isa_ok $got->columns, 'Maro::List';
     is $got->columns->length, 2;
     isa_ok $got->columns->first, 'Maro::Column';
     is $got->columns->first->name, 'from';
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
-    $got = $driver->get({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    ok $driver->delete({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column});
+    $got = $driver->get({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column});
     is $got, undef;
 }
 
 sub _slice : Test(10) {
     my $key = rand;
     my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'from'}, 'Shiga');
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'age'},  21);
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'name'}, 'Inoue');
+    ok $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'from'}, 'Shiga');
+    ok $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'age'},  21);
+    ok $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'name'}, 'Inoue');
 
-    my $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Standard2', key => $key});
+    my $user = $driver->slice_as_hash({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key});
     is $user->{from}, 'Shiga';
     is $user->{age}, 21;
     is $user->{name}, 'Inoue';
 
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $key});
+    ok $driver->delete({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key});
 
-    $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Standard2', key => $key});
+    $user = $driver->slice_as_hash({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key});
     is $user->{from}, undef;
     is $user->{age}, undef;
     is $user->{name}, undef;
@@ -67,31 +67,31 @@ sub _slice : Test(10) {
 
 sub _describe : Tests(2) {
     my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
-    my $desc = ($driver->describe_keyspace({key_space => 'MaroBlog'}));
-    ok $desc->{Entry};
-    is $desc->{Entry}->{Type}, 'Standard';
+    my $desc = ($driver->describe_keyspace({key_space => 'MaroTest'}));
+    ok $desc->{StandardUTF8};
+    is $desc->{StandardUTF8}->{Type}, 'Standard';
 }
 
 sub _multiget_slice : Test(7) {
     my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
 
-    my $multiget_empty = $driver->multiget_slice({key_space => 'Keyspace1', column_family => 'Standard2', keys => [qw{dummy1 dummy2 dummy3}], column_names => [qw{dummy1 dummy2}]});
+    my $multiget_empty = $driver->multiget_slice({key_space => 'MaroTest', column_family => 'StandardUTF8', keys => [qw{dummy1 dummy2 dummy3}], column_names => [qw{dummy1 dummy2}]});
     is_deeply $multiget_empty->{dummy1}, [];
 
     my @keys;
     for(0..2) {
         my $key = rand;
         push @keys, $key;
-        $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'key'  }, $key);
-        $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'index'}, $_);
-        $driver->set({key_space => 'Keyspace1', column_family => 'Standard2', key => $key, column => 'hello'}, 'hello');
+        $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'key'  }, $key);
+        $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'index'}, $_);
+        $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'hello'}, 'hello');
     }
-    my $multiget = $driver->multiget_slice({key_space => 'Keyspace1', column_family => 'Standard2', keys => [@keys], column_names => [qw{key index}]});
+    my $multiget = $driver->multiget_slice({key_space => 'MaroTest', column_family => 'StandardUTF8', keys => [@keys], column_names => [qw{key index}]});
 
     for(@keys) {
         isa_ok $multiget->{$_}, 'Maro::List';
         is $multiget->{$_}->to_hash->{key}, $_;
-        $driver->delete({key_space => 'Keyspace1', column_family => 'Standard2', key => $_});
+        $driver->delete({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $_});
     }
 }
 
@@ -101,14 +101,14 @@ sub _super_column_get_set : Test(7) {
     my $super_column = rand;
     my $column_name = rand;
     my $value = rand;
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => $column_name}, $value);
-    my $column = $driver->get({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => $column_name});
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column, column => $column_name}, $value);
+    my $column = $driver->get({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column, column => $column_name});
     isa_ok $column, 'Maro::Column';
     is $column->value, $value;
     is $column->name,  $column_name;
     ok time - $column->timestamp < 10;
-    is $driver->get({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => $column_name . '_'}), undef;
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => $column_name});
+    is $driver->get({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column, column => $column_name . '_'}), undef;
+    ok $driver->delete({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column, column => $column_name});
 }
 
 sub _super_column_slice : Test(10) {
@@ -120,18 +120,18 @@ sub _super_column_slice : Test(10) {
     warn "super column $super_column";
     warn "key $key";
 
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => 'from'}, 'Shiga');
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => 'age'},  21);
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column, column => 'name'}, 'Inoue');
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column, column => 'from'}, 'Shiga');
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column, column => 'age'},  21);
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column, column => 'name'}, 'Inoue');
 
-    my $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    my $user = $driver->slice_as_hash({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column});
     is $user->{from}, 'Shiga';
     is $user->{age}, 21;
     is $user->{name}, 'Inoue';
 
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    ok $driver->delete({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column});
 
-    $user = $driver->slice_as_hash({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column});
+    $user = $driver->slice_as_hash({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column});
     is $user->{from}, undef;
     is $user->{age}, undef;
     is $user->{name}, undef;
@@ -145,15 +145,15 @@ sub _super_column_slice_2 : Tests {
     my $column_name = rand;
     my $value = rand;
 
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column1, column => 'from'}, 'Shiga');
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column1, column => 'age'},  21);
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column1, column => 'name'}, 'Inoue');
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column1, column => 'from'}, 'Shiga');
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column1, column => 'age'},  21);
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column1, column => 'name'}, 'Inoue');
 
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column2, column => 'from'}, 'Chiba');
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column2, column => 'age'},  33);
-    ok $driver->set({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column2, column => 'name'}, 'Yamada');
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column2, column => 'from'}, 'Chiba');
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column2, column => 'age'},  33);
+    ok $driver->set({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column2, column => 'name'}, 'Yamada');
 
-    my $slice = $driver->slice({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
+    my $slice = $driver->slice({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key});
     isa_ok $slice, 'Maro::List';
     isa_ok $slice->first, 'Maro::SuperColumn';
     is $slice->length, 2;
@@ -161,16 +161,16 @@ sub _super_column_slice_2 : Tests {
     is $slice->first->columns->first->name, 'age';
     is $slice->first->columns->first->value, 21;
 
-    $slice = $driver->slice({key_space => 'Keyspace1', column_family => 'Super2', key => $key, super_column => $super_column2});
+    $slice = $driver->slice({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column2});
     isa_ok $slice, 'Maro::List';
     isa_ok $slice->first, 'Maro::Column';
     is $slice->length, 3;
 
 
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
-    ok $driver->delete({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
+    ok $driver->delete({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key});
+    ok $driver->delete({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key});
 
-    $slice = $driver->slice({key_space => 'Keyspace1', column_family => 'Super2', key => $key});
+    $slice = $driver->slice({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key});
     isa_ok $slice, 'Maro::List';
     is $slice->length, 0;
 }

@@ -7,14 +7,11 @@ use lib file(__FILE__)->dir->parent->subdir('lib')->stringify;
 use lib file(__FILE__)->dir->subdir('lib')->stringify;
 use Test::More;
 use Maro;
-use Blog::EntryWithSuperColumn;
-use Blog::EntryTimeline;
-use Blog::UserTimeline;
-use Blog::Entry;
+use TestModel;
 
 sub _slice_normal_column_utf8 : Tests {
     my $key = rand;
-    my $entry = Blog::Entry->create(
+    my $entry = TestModel::StandardUTF8->create(
         key => $key,
     );
 
@@ -23,7 +20,7 @@ sub _slice_normal_column_utf8 : Tests {
         $entry->$method($_);
     }
 
-    my $slice0 = Blog::Entry->slice(key => $key, per_slice => 3);
+    my $slice0 = TestModel::StandardUTF8->slice(key => $key, per_slice => 3);
     isa_ok $slice0, 'Maro::Slice';
     isa_ok $slice0->items, 'Maro::List';
     is $slice0->items->length, 3;
@@ -63,14 +60,14 @@ sub _slice_normal_column_utf8 : Tests {
 sub _slice_super_column_timeuuid : Tests {
     my $key = rand;
     for (0..9) {
-        Blog::EntryTimeline->create_now(
+        TestModel::SuperTime->create_now(
             key => $key,
             title => 'entry' . $_,
             body => 'body' . $_,
             author => 'author' . $_,
         );
     }
-    my $slice0 = Blog::EntryTimeline->slice(key => $key, per_slice => 3);
+    my $slice0 = TestModel::SuperTime->slice(key => $key, per_slice => 3);
     isa_ok $slice0, 'Maro::Slice';
     isa_ok $slice0->items, 'Maro::List';
     is $slice0->items->length, 3;
@@ -109,7 +106,7 @@ sub _slice_super_column_timeuuid : Tests {
 sub _slice_super_column_utf8 : Tests {
     my $key = rand;
     for (0..9) {
-        my $d = Blog::EntryWithSuperColumn->create(
+        my $d = TestModel::SuperUTF8->create(
             key => $key,
             super_column => 'super_column' . $_,
             title => 'entry' . $_,
@@ -117,7 +114,7 @@ sub _slice_super_column_utf8 : Tests {
             author => 'author' . $_,
         );
     }
-    my $slice0 = Blog::EntryWithSuperColumn->slice(key => $key, per_slice => 3);
+    my $slice0 = TestModel::SuperUTF8->slice(key => $key, per_slice => 3);
     isa_ok $slice0, 'Maro::Slice';
     isa_ok $slice0->items, 'Maro::List';
     is $slice0->items->length, 3;
@@ -154,7 +151,7 @@ sub _slice_super_column_utf8 : Tests {
 }
 
 sub _follow : Tests {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
     for(0..9) {
         $tl->add_value($_);
     }
@@ -201,7 +198,7 @@ sub _follow : Tests {
 }
 
 sub _follow_prev : Tests {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
     for(0..9) {
         $tl->add_value($_);
     }
@@ -219,7 +216,7 @@ sub _follow_prev : Tests {
 }
 
 sub _reverse_follow : Tests {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
     for(0..9) {
         $tl->add_value($_);
     }
@@ -266,7 +263,7 @@ sub _reverse_follow : Tests {
 }
 
 sub _reverse_follow_prev : Tests {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
     for(0..9) {
         $tl->add_value($_);
     }
@@ -284,7 +281,7 @@ sub _reverse_follow_prev : Tests {
 }
 
 sub _empty : Tests {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
 
     my $slice = $tl->slice(per_slice => 3);
     for ($slice, $slice->followings, $slice->precedings) {
@@ -300,7 +297,7 @@ sub _empty : Tests {
 }
 
 sub _end : Tests {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
 
     for(0..2) {
         $tl->add_value($_);
@@ -330,24 +327,24 @@ sub _end : Tests {
 }
 
 sub _map_code : Test(2) {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
     for(0..9) {
         $tl->add_value($_);
     }
 
-    Blog::UserTimeline->map_code(sub { $_->value * 2; });
+    TestModel::StandardTime->map_code(sub { $_->value * 2; });
 
     my $slice = $tl->slice(per_slice => 3);
     is_deeply $slice->items->to_a, [0, 2, 4];
 
-    Blog::UserTimeline->map_code(undef);
+    TestModel::StandardTime->map_code(undef);
 
     $slice = $tl->slice(per_slice => 3);
     is_deeply $slice->items->map_value->to_a, [0, 1, 2];
 }
 
 sub _select_code : Test(3) {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
     for(0..12) {
         $tl->add_value($_);
     }
@@ -364,7 +361,7 @@ sub _select_code : Test(3) {
 }
 
 sub _select_code_precedings : Test(3) {
-    my $tl = Blog::UserTimeline->find(rand);
+    my $tl = TestModel::StandardTime->find(rand);
     for(0..12) {
         $tl->add_value($_);
     }
