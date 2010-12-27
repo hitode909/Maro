@@ -200,17 +200,39 @@ sub AUTOLOAD {
     $self->param($method, @_);
 }
 
+sub is_super_column {
+    my ($self) = @_;
+
+    if (exists $self->{is_super_column}) {
+        return $self->{is_super_column};
+    }
+
+    my $described = $self->driver->describe_keyspace({$self->default_keys});
+    $self->{is_super_column} = $self->describe->{Type} eq 'Super';
+}
+
+sub describe {
+    my ($self) = @_;
+    $self->{__describe} ||= $self->driver->describe_keyspace({$self->default_keys})->{$self->column_family};
+}
+
 sub load_columns {
     my ($self) = @_;
-    if ($self->driver->can("slice_as_hash")) {
-        my $values = $self->driver->slice_as_hash({$self->default_keys});
-        for (keys %$values) {
-            utf8::decode($values->{$_}) if ($self->is_utf8_column($_) and not utf8::is_utf8($values->{$_}));
-            $self->{$_} = $values->{$_};
-        }
+    my $columns;
+
+    if ($self->is_super_column) {
+        my $super_column = $self->driver->get({$self->default_keys}); # columnかsupercolumnを返す
+        $columns = $super_column->columns;
     } else {
-        # TODO: libcassandraはsliceできない
+        $columns = $self->driver->slice({$self->default_keys});
     }
+
+    $columns->each(sub {
+        my $column = $_;
+        my $value = $column->value;
+        utf8::decode($value) if ($self->is_utf8_column($column->name) and not utf8::is_utf8($value));
+        $self->{$column->name} = $value;
+    });
 }
 
 sub param {
