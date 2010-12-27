@@ -10,7 +10,7 @@ use DateTime;
 use DateTime::Format::MySQL;
 use Maro::Slice;
 
-__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list reference_class map_code _is_super_column _describe);
+__PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list map_code _is_super_column _describe);
 __PACKAGE__->mk_classdata(default_driver_class => 'Maro::Driver::Net::Cassandra');
 
 # public
@@ -103,27 +103,6 @@ sub slice {
         $args->{super_column} = $self_or_class->super_column;
     }
     Maro::Slice->new($args);
-}
-
-sub slice_as_reference {
-    my ($self, %args) = @_;
-    croak "reference class not defined" unless $self->reference_class;
-    $self->slice_as_list(%args)->map(sub { $self->reference_class->new_by_key($_->value) });
-
-}
-
-sub add_reference_object {
-    my ($self, $object) = @_;
-    croak "reference class not defined" unless $self->reference_class;
-    croak "$object is not ${self->reference_class}" unless $object->isa($self->reference_class);
-    $self->add_value($object->key);
-}
-
-sub reference_object {
-    my ($self, $key) = @_;
-    die "reference class not defined" unless $self->reference_class;
-    $self->reference_class->require;
-    $self->reference_class->new_by_key($key);
 }
 
 sub add_value {

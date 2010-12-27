@@ -168,9 +168,6 @@ sub map_item {
     if ($self->model->map_code) {
         return $self->model->map_code->($item);
     }
-    if ($self->model->reference_class) {
-        return $self->model->reference_object($item->value);
-    }
     return $item;
 }
 

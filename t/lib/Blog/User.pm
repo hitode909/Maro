@@ -15,7 +15,6 @@ sub write_entry {
         author => $self->key,
         body => $body,
     );
-    $self->timeline->add_reference_object($entry);
 
     $entry;
 }
@@ -25,10 +24,5 @@ sub timeline {
     Blog::UserTimeline->find($self->key);
 }
 
-sub entries {
-    my ($self) = @_;
-
-    $self->timeline->slice_as_reference;
-}
 
 1;
