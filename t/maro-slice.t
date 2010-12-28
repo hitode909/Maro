@@ -197,6 +197,58 @@ sub _follow : Tests {
     ok $slice3->has_prev;
 }
 
+sub _offset : Tests {
+    my $tl = TestModel::StandardTime->find(rand);
+    for(0..9) {
+        $tl->add_value($_);
+    }
+
+    my $slice = $tl->slice(per_slice => 3, offset => 3);
+    isa_ok $slice, 'Maro::Slice';
+    isa_ok $slice->items, 'Maro::List';
+
+    is_deeply $tl->slice(per_slice => 3, offset => 0)->items->map_value->to_a, [0, 1, 2];
+    is_deeply $tl->slice(per_slice => 3, offset => 1)->items->map_value->to_a, [1, 2, 3];
+    is_deeply $tl->slice(per_slice => 3, offset => 8)->items->map_value->to_a, [8, 9];
+    is_deeply $tl->slice(per_slice => 3, offset => 9)->items->map_value->to_a, [9];
+    is_deeply $tl->slice(per_slice => 3, offset => 10)->items->map_value->to_a, [];
+    is_deeply $tl->slice(per_slice => 3, offset => 11)->items->map_value->to_a, [];
+}
+
+sub _offset_select : Tests {
+    my $tl = TestModel::StandardTime->find(rand);
+    for(0..9) {
+        $tl->add_value($_);
+    }
+
+    my $slice = $tl->slice(per_slice => 3, offset => 3, select_code => sub { $_->value % 2 == 0 });
+    isa_ok $slice, 'Maro::Slice';
+    isa_ok $slice->items, 'Maro::List';
+
+    is_deeply $tl->slice(per_slice => 3, offset => 0, select_code => sub { $_->value % 2 == 0 })->items->map_value->to_a, [0, 2, 4];
+    is_deeply $tl->slice(per_slice => 3, offset => 1, select_code => sub { $_->value % 2 == 0 })->items->map_value->to_a, [2, 4, 6];
+    is_deeply $tl->slice(per_slice => 3, offset => 2, select_code => sub { $_->value % 2 == 0 })->items->map_value->to_a, [4,6,8];
+    is_deeply $tl->slice(per_slice => 3, offset => 3, select_code => sub { $_->value % 2 == 0 })->items->map_value->to_a, [6,8];
+    is_deeply $tl->slice(per_slice => 3, offset => 4, select_code => sub { $_->value % 2 == 0 })->items->map_value->to_a, [8];
+    is_deeply $tl->slice(per_slice => 3, offset => 5, select_code => sub { $_->value % 2 == 0 })->items->map_value->to_a, [];
+}
+
+sub _offset_select_follow_prev : Tests {
+    my $tl = TestModel::StandardTime->find(rand);
+    for(0..13) {
+        $tl->add_value($_);
+    }
+
+    my $slice = $tl->slice(per_slice => 3, offset => 2, select_code => sub { $_->value % 2 == 0 });
+    is_deeply $slice->items->map_value->to_a, [4,6,8];
+
+    is_deeply $slice->followings->items->map_value->to_a, [10, 12];
+    is_deeply $slice->followings->precedings->items->map_value->to_a, [4, 6, 8];
+
+    is_deeply $slice->precedings->items->map_value->to_a, [0, 2];
+    is_deeply $slice->precedings->followings->items->map_value->to_a, [4, 6, 8];
+}
+
 sub _follow_prev : Tests {
     my $tl = TestModel::StandardTime->find(rand);
     for(0..9) {

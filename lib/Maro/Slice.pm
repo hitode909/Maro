@@ -4,7 +4,7 @@ use warnings;
 use base qw( Class::Accessor::Fast );
 use Maro::List;
 
-__PACKAGE__->mk_accessors(qw(model key super_column per_slice reversed following_column preceding_column empty_slice map_code select_code is_top));
+__PACKAGE__->mk_accessors(qw(model key super_column per_slice reversed following_column preceding_column empty_slice map_code select_code is_top offset));
 
 sub new {
     my $class = shift;
@@ -16,11 +16,20 @@ sub items {
     my ($self) = @_;
     return $self->{items} if exists $self->{items};
     return Maro::List->new if $self->empty_slice;
+    if ($self->offset && $self->following_column) {
+        warn 'offsetとfollowing_columnが指定されているが，following_columnは無視します';
+        $self->following_column(undef);
+    }
+    if ($self->offset && $self->preceding_column) {
+        warn 'offsetとpreceding_columnが指定されているが，preceding_columnは無視します';
+        $self->preceding_column(undef);
+    }
+    return $self->items_with_offset if ($self->offset || 0) > 0;
 
     my $count = $self->select_code ? $self->per_slice * 3 : $self->per_slice + 1;
     if (defined $self->following_column) {
         # 最初が指定されてるとき has_nextチェックのために1つ多めに取得する has_prev unless is_top
-        # gollowing_column=3, count=3のとき，[3,4,5,6]がきて，item=[3,4,5], previous_object=3, next_object=6
+        # following_column=3, count=3のとき，[3,4,5,6]がきて，item=[3,4,5], previous_object=3, next_object=6
         my $items = $self->model->slice_as_list(
             key => $self->key,
             super_column => $self->super_column,
@@ -28,7 +37,6 @@ sub items {
             count => $count,
             reversed => $self->reversed,
         );
-        # 先にmapしたらおかしくなる!!!!!!!同時にちまちま見る必要がございます!!!!!!!やばい!!!!!!!!!!!!!!!!!!!
         $self->{items} = Maro::List->new;
         $items->each(sub {
              if ($self->{items}->length == $self->per_slice && !$self->preceding_column) {
@@ -142,7 +150,7 @@ sub followings {
 
 sub precedings {
     my ($self) = @_;
-    $self->items unless $self->following_column or exists $self->{items}; # gollowing_column入ってないとき，items一回呼ばないとけない
+    $self->items unless $self->following_column or exists $self->{items}; # following_column入ってないとき，items一回呼ばないとけない
     return $self->new_empty unless $self->has_prev;
     $self->new(
         key => $self->key,
@@ -156,6 +164,45 @@ sub precedings {
 }
 
 # private
+
+# offset > 0のとき offset分読み飛ばす is_topは0 following, precedingは指定する
+sub items_with_offset {
+    my ($self) = @_;
+
+    my $count = $self->per_slice + $self->offset + 1;
+    $count *= 3 if $self->select_code;
+
+    my $items = $self->model->slice_as_list(
+        key => $self->key,
+        super_column => $self->super_column,
+        start => $self->following_column,
+        count => $count,
+        reversed => $self->reversed,
+    );
+
+    $self->{items} = Maro::List->new;
+    my $skip = 0;
+    $items->each(sub {
+        if ($self->{items}->length == $self->per_slice && !$self->preceding_column) { # 最後の次 = preceding
+            $self->preceding_column($_->isa('Maro::Column') ? $_->name : $_->key);
+        }
+        my $item = $self->map_item($_);
+        if ($self->{items}->length < $self->per_slice) {
+            if ($self->select_code_ok($item)) {
+                if ($skip == $self->offset) {
+                    if (!$self->following_column) { # following = itemsの先頭
+                        $self->following_column($_->isa('Maro::Column') ? $_->name : $_->key);
+                    }
+                    $self->{items}->push($item);
+                } else {
+                    $skip++;
+                }
+            }
+        }
+    });
+    return $self->{items};
+}
+
 sub new_empty {
     my ($self) = @_;
     $self->new(
