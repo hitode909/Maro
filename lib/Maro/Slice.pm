@@ -40,7 +40,7 @@ sub items {
         $self->{items} = Maro::List->new;
         $items->each(sub {
              if ($self->{items}->length == $self->per_slice && !$self->preceding_column) {
-                 $self->preceding_column($_->isa('Maro::Column') ? $_->name : $_->key);
+                 $self->preceding_column($_->isa('Maro::Column') ? $_->name : $_->super_column);
              } elsif ($self->{items}->length < $self->per_slice) {
                  my $item = $self->map_item($_);
                  if ($self->select_code_ok($item)) {
@@ -76,7 +76,7 @@ sub items {
                      $self->{items}->unshift($item);
                  }
                  if ($self->{items}->length  == $self->per_slice) {
-                     $self->following_column($_->isa('Maro::Column') ? $_->name : $_->key);
+                     $self->following_column($_->isa('Maro::Column') ? $_->name : $_->super_column);
                  }
              } elsif ($self->{items}->length  == $self->per_slice) {
                  $self->is_top(0);
@@ -94,7 +94,7 @@ sub items {
         $self->{items} = Maro::List->new;
         $items->each(sub {
              if ($self->{items}->length == $self->per_slice && !$self->preceding_column) {
-                 $self->preceding_column($_->isa('Maro::Column') ? $_->name : $_->key);
+                 $self->preceding_column($_->isa('Maro::Column') ? $_->name : $_->super_column);
              } elsif ($self->{items}->length < $self->per_slice) {
                  my $item = $self->map_item($_);
 
@@ -184,14 +184,14 @@ sub items_with_offset {
     my $skip = 0;
     $items->each(sub {
         if ($self->{items}->length == $self->per_slice && !$self->preceding_column) { # 最後の次 = preceding
-            $self->preceding_column($_->isa('Maro::Column') ? $_->name : $_->key);
+            $self->preceding_column($_->isa('Maro::Column') ? $_->name : $_->super_column);
         }
         my $item = $self->map_item($_);
         if ($self->{items}->length < $self->per_slice) {
             if ($self->select_code_ok($item)) {
                 if ($skip == $self->offset) {
                     if (!$self->following_column) { # following = itemsの先頭
-                        $self->following_column($_->isa('Maro::Column') ? $_->name : $_->key);
+                        $self->following_column($_->isa('Maro::Column') ? $_->name : $_->super_column);
                     }
                     $self->{items}->push($item);
                 } else {

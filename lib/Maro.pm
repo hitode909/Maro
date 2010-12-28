@@ -91,7 +91,7 @@ sub slice_as_list {
 
 sub new_from_super_column {
     my ($class, $super_column, $slice_key) = @_;
-    my $self = $class->new(%{$super_column->columns->to_hash}, super_column => $slice_key, key => $super_column->name);
+    my $self = $class->new(%{$super_column->columns->to_hash}, super_column => $super_column->name, key => $slice_key);
 }
 
 sub slice {
