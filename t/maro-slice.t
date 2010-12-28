@@ -249,6 +249,17 @@ sub _offset_select_follow_prev : Tests {
     is_deeply $slice->precedings->followings->items->map_value->to_a, [4, 6, 8];
 }
 
+sub _items_with_offset_limit : Tests {
+    my $tl = TestModel::StandardTime->find(rand);
+    for(0..9) {
+        $tl->add_value($_);
+    }
+
+    my $slice = $tl->slice;
+    is_deeply $slice->items(0, 3)->map_value->to_a, [0, 1, 2];
+    is_deeply $slice->items(1, 4)->map_value->to_a, [1, 2, 3, 4];
+}
+
 sub _follow_prev : Tests {
     my $tl = TestModel::StandardTime->find(rand);
     for(0..9) {

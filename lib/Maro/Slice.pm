@@ -13,7 +13,18 @@ sub new {
 }
 
 sub items {
-    my ($self) = @_;
+    my ($self, $offset, $limit) = @_;
+
+    # Query互換
+    if (defined $offset || defined $limit) {
+        delete $self->{items};
+        $self->following_column(undef);
+        $self->preceding_column(undef);
+        $self->is_top(undef);
+        $self->offset($offset);
+        $self->per_slice($limit);
+    }
+
     return $self->{items} if exists $self->{items};
     return Maro::List->new if $self->empty_slice;
     if ($self->offset && $self->following_column) {
@@ -124,9 +135,8 @@ sub has_next {
 
 sub count {
     my ($self) = @_;
-    return $self->{count} if exists $self->{count};
 
-    $self->{count} = $self->model->count(
+    $self->model->count(
         key => $self->key,
         super_column => $self->super_column
     );
@@ -230,5 +240,6 @@ sub map_item {
     }
     return $item;
 }
+
 
 1;
