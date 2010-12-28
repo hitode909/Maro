@@ -5,7 +5,7 @@ use base qw(Test::Class);
 use Path::Class;
 use lib file(__FILE__)->dir->parent->subdir('lib')->stringify;
 use lib file(__FILE__)->dir->subdir('lib')->stringify;
-
+use UUID::Tiny;
 use Test::More;
 use Test::Exception;
 use Maro::Driver::Net::Cassandra;
@@ -43,6 +43,23 @@ sub _set_get_super_column : Tests {
     ok $driver->delete({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column});
     $got = $driver->get({key_space => 'MaroTest', column_family => 'SuperUTF8', key => $key, super_column => $super_column});
     is $got, undef;
+}
+
+sub _set_get_timeuuid : Tests {
+    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
+    my $key = rand;
+    my $column_name = UUID::Tiny::create_uuid(UUID::Tiny::UUID_V1);
+    my $column_undef = UUID::Tiny::create_uuid(UUID::Tiny::UUID_V1);
+    my $value = rand;
+    ok $driver->set({key_space => 'MaroTest', column_family => 'StandardTime', key => $key, column => $column_name}, $value);
+    my $column = $driver->get({key_space => 'MaroTest', column_family => 'StandardTime', key => $key, column => $column_name});
+    isa_ok $column, 'Maro::Column';
+    is $column->value, $value;
+    is $column->name, $column_name;
+    ok time - $column->timestamp < 10;
+    is $driver->get({key_space => 'MaroTest', column_family => 'StandardTime', parent_key => $key, key => $key, column => $column_undef}), undef;
+    ok $driver->delete({key_space => 'MaroTest', column_family => 'StandardTime', key => $key, column => $column->name});
+    is $driver->get({key_space => 'MaroTest', column_family => 'StandardTime', parent_key => $key, key => $key, column => $column->name}), undef;
 }
 
 sub _slice : Test(10) {
