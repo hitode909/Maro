@@ -42,10 +42,10 @@ sub get {
 sub count {
     my ($self, $arg) = @_;
     my $count;
+    $self->validate_key_arg($arg);
     eval {
         $count = $self->key_space($arg->{key_space})->getCount($arg->{key}, $arg->{column_family}, $arg->{super_column});
     };
-    warn $@;
     if ($@ =~ qr/NotFoundException/) {
         return 0;
     }
@@ -54,10 +54,11 @@ sub count {
 
 sub slice {
     my ($self, $arg) = @_;
+    $self->validate_key_arg($arg, 0);
 
     my $slice;
     eval {
-        $slice = $self->key_space($arg->{key_space})->get_slice($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{start}, $arg->{finish}, $arg->{reversed}, $arg->{count} || 100);
+        $slice = $self->key_space($arg->{key_space})->get_slice($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{start}, $arg->{finish}, $arg->{reversed}, $arg->{count});
     };
     if ($@ =~ qr/NotFoundException/) {
         return;
@@ -67,6 +68,7 @@ sub slice {
 
 sub delete {
     my ($self, $arg) = @_;
+    $self->validate_key_arg($arg);
     eval {
         $self->key_space($arg->{key_space})->remove($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{column});
     };
@@ -79,6 +81,7 @@ sub delete {
 sub describe_keyspace {
     my ($self, $arg) = @_;
     my $what;
+    $self->validate_key_arg($arg);
     eval {
         $what = $self->key_space($arg->{key_space})->getDescription;
     };
@@ -96,12 +99,24 @@ sub key_space {
     $self->client->getKeyspace($key_space_name);
 }
 
+
 sub validate_key_arg {
-    my ($self, $arg) = @_;
-    foreach (qw{key_space key column_family}) {
-        defined $arg->{$_} or croak "$_ is required.";
+    my ($self, $arg, $validate) = @_;
+
+    # foreach (qw{key_space key column_family}) {
+    #     defined $arg->{$_} or croak "$_ is required.";
+    # }
+    # unless (defined $validate && !$validate) {
+    #     croak "column or super_column is required." unless defined $arg->{column} or defined $arg->{super_column};
+    # }
+
+
+    for (qw{super_column column key start finish}) {
+        $arg->{$_} = '' unless defined $arg->{$_};
     }
-    croak "column or super_column is required." unless defined $arg->{column} or defined $arg->{super_column};
+    $arg->{reversed} = 0 unless defined $arg->{reversed};
+    $arg->{count} = 100 unless defined $arg->{count};
+
     1;
 }
 
