@@ -89,29 +89,6 @@ sub _describe : Tests(2) {
     is $desc->{StandardUTF8}->{Type}, 'Standard';
 }
 
-sub _multiget_slice : Test(7) {
-    my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
-
-    my $multiget_empty = $driver->multiget_slice({key_space => 'MaroTest', column_family => 'StandardUTF8', keys => [qw{dummy1 dummy2 dummy3}], column_names => [qw{dummy1 dummy2}]});
-    is_deeply $multiget_empty->{dummy1}, [];
-
-    my @keys;
-    for(0..2) {
-        my $key = rand;
-        push @keys, $key;
-        $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'key'  }, $key);
-        $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'index'}, $_);
-        $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => 'hello'}, 'hello');
-    }
-    my $multiget = $driver->multiget_slice({key_space => 'MaroTest', column_family => 'StandardUTF8', keys => [@keys], column_names => [qw{key index}]});
-
-    for(@keys) {
-        isa_ok $multiget->{$_}, 'Maro::List';
-        is $multiget->{$_}->to_hash->{key}, $_;
-        $driver->delete({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $_});
-    }
-}
-
 sub _super_column_get_set : Test(7) {
     my $driver = Maro::Driver::Net::Cassandra->new('localhost', 9160);
     my $key = rand;
