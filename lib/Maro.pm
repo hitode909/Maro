@@ -11,7 +11,7 @@ use DateTime::Format::MySQL;
 use Maro::Slice;
 
 __PACKAGE__->mk_classdata($_) for qw(driver_class driver_object server_host server_port key_space column_family utf8_columns _is_list map_code _is_super_column _describe);
-__PACKAGE__->mk_classdata(default_driver_class => 'Maro::Driver::Net::Cassandra');
+__PACKAGE__->mk_classdata(default_driver_class => 'Maro::Driver::Net::Cassandra::libcassandra');
 
 # public
 
