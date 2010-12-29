@@ -6,19 +6,6 @@ use base qw(
 );
 use Carp 'croak';
 
-sub set {
-    my ($self, $arg, $value) = @_;
-}
-
-sub get {
-    my ($self, $arg) = @_;
-}
-
-sub slice_as_hash {
-    my ($self, $arg) = @_;
-    $self->slice($arg)->to_hash;
-}
-
 # private
 sub parse_slice {
     my ($self, $slice) = @_;
