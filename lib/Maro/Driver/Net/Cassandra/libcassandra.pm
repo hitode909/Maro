@@ -11,7 +11,6 @@ __PACKAGE__->mk_accessors(
     qw(client)
 );
 
-
 sub new {
     my ($class, $host, $port) = @_;
     my $client = Net::Cassandra::libcassandra::new($host, $port);
@@ -21,35 +20,90 @@ sub new {
 sub set {
     my ($self, $arg, $value) = @_;
     $self->validate_key_arg($arg);
-    $self->key_space($arg)->insertColumn($arg->{key}, $arg->{column_family}, $arg->{parent_key} || '', $arg->{column}, $value);
-    $value;
+    $self->key_space($arg->{key_space})->insertColumn($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{column}, $value);
+    1;
 }
 
+# key_space key column_family super_column column
 sub get {
     my ($self, $arg) = @_;
     $self->validate_key_arg($arg);
 
-    # 存在しないキーをgetすると例外が発生するけど，使いにくいので，nullを返す．どういう例外だったかは見てない．
     my $value;
     eval {
-        $value = $self->key_space($arg)->getColumnValue($arg->{key}, $arg->{column_family}, $arg->{parent_key} || '', $arg->{column});
+        $value = $self->key_space($arg->{key_space})->get($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{column});
     };
-    if ($@) { return; }
-    Maro::Column->new({name => $arg->{column}, value => $value, timestamp => time});
+    if ($@ =~ qr/NotFoundException/) {
+        return;
+    }
+    return $self->parse_item($value);
 }
+
+sub count {
+    my ($self, $arg) = @_;
+    my $count;
+    eval {
+        $count = $self->key_space($arg->{key_space})->getCount($arg->{key}, $arg->{column_family}, $arg->{super_column});
+    };
+    warn $@;
+    if ($@ =~ qr/NotFoundException/) {
+        return 0;
+    }
+    $count;
+}
+
+sub slice {
+    my ($self, $arg) = @_;
+
+    my $slice;
+    eval {
+        $slice = $self->key_space($arg->{key_space})->get_slice($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{start}, $arg->{finish}, $arg->{reversed}, $arg->{count});
+    };
+    if ($@ =~ qr/NotFoundException/) {
+        return;
+    }
+    return Maro::List->new($slice)->map(sub {
+                                            $self->parse_item($_)
+                                        });
+}
+
+sub delete {
+    my ($self, $arg) = @_;
+    eval {
+        $self->key_space($arg->{key_space})->remove($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{column});
+    };
+    if ($@ =~ qr/NotFoundException/) {
+        return;
+    }
+    1;
+}
+
+sub describe_keyspace {
+    my ($self, $arg) = @_;
+    my $what;
+    eval {
+        $what = $self->key_space($arg->{key_space})->getDescription;
+    };
+    die $@->why if $@;
+    $what;
+}
+
+
+# private
 
 # TODO: 効率化
 sub key_space {
-    my ($self, $arg) = @_;
+    my ($self, $key_space_name) = @_;
 
-    $self->client->getKeyspace($arg->{key_space});
+    $self->client->getKeyspace($key_space_name);
 }
 
 sub validate_key_arg {
     my ($self, $arg) = @_;
-    foreach (qw{key_space key column_family column}) {
+    foreach (qw{key_space key column_family}) {
         defined $arg->{$_} or croak "$_ is required.";
     }
+    croak "column or super_column is required." unless defined $arg->{column} or defined $arg->{super_column};
     1;
 }
 

@@ -61,13 +61,7 @@ sub get {
         return if $@->isa('Net::Cassandra::Backend::NotFoundException');
         die $@->why if $@;
     }
-    # TODO: メソッド作ってやらせる
-    if ($what->super_column) {
-        my $columns = Maro::List->new([map {Maro::Column->new({name => $_->name, value => $_->value, timestamp => $_->timestamp}) } @{$what->super_column->columns} ]);
-        Maro::SuperColumn->new({name => $what->super_column->name, columns => $columns});
-    } else {
-        Maro::Column->new({name => $what->column->name, value => $what->column->value, timestamp => $what->column->timestamp});
-    }
+    $self->parse_item($what);
 }
 
 sub count {
@@ -119,7 +113,7 @@ sub slice {
           );
     };
     die $@->why if $@;
-    Maro::List->from_backend_list($what);
+    $self->parse_slice($what);
 }
 
 sub multiget_slice {
