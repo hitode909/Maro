@@ -57,14 +57,12 @@ sub slice {
 
     my $slice;
     eval {
-        $slice = $self->key_space($arg->{key_space})->get_slice($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{start}, $arg->{finish}, $arg->{reversed}, $arg->{count});
+        $slice = $self->key_space($arg->{key_space})->get_slice($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{start}, $arg->{finish}, $arg->{reversed}, $arg->{count} || 100);
     };
     if ($@ =~ qr/NotFoundException/) {
         return;
     }
-    return Maro::List->new($slice)->map(sub {
-                                            $self->parse_item($_)
-                                        });
+    $self->parse_slice($slice);
 }
 
 sub delete {
