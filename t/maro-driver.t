@@ -122,7 +122,7 @@ sub _timeuuid_many : Tests {
         my $key = rand;
         for(1..1000) {
             my $column = UUID::Tiny::create_uuid(UUID::Tiny::UUID_V1);
-            warn join(' ', $class, $_, UUID::Tiny::uuid_to_string($column));
+            # warn join(' ', $class, $_, UUID::Tiny::uuid_to_string($column));
             $driver->set({key_space => 'MaroTest', column_family => 'StandardTime', key => $key, column => $column}, 1);
         }
         ok $class;
@@ -134,7 +134,7 @@ sub _utf8_many : Tests {
         my $driver = $class->new('localhost', 9160);
         my $key = rand;
         for(1..1000) {
-            warn join(' ', $class, $_);
+            # warn join(' ', $class, $_);
             ok $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => $_}, 1);
         }
     }
