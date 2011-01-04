@@ -115,7 +115,7 @@ sub _describe : Test(1) {
     is_deeply $driver1->describe_keyspace({key_space => 'MaroTest'}), $driver2->describe_keyspace({key_space => 'MaroTest'});
 }
 
-sub _timeuuid_many : Tests {
+sub _timeuuid_many : Test(2) {
     use UUID::Tiny;
     for my $class qw(Maro::Driver::Net::Cassandra::libcassandra Maro::Driver::Net::Cassandra) {
         my $driver = $class->new('localhost', 9160);
@@ -129,17 +129,22 @@ sub _timeuuid_many : Tests {
     }
 }
 
-sub _utf8_many : Tests {
+sub _utf8_many : Test(2) {
     for my $class qw(Maro::Driver::Net::Cassandra Maro::Driver::Net::Cassandra::libcassandra) {
         my $driver = $class->new('localhost', 9160);
         my $key = rand;
         for(1..1000) {
             # warn join(' ', $class, $_);
-            ok $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => $_}, 1);
+            $driver->set({key_space => 'MaroTest', column_family => 'StandardUTF8', key => $key, column => $_}, 1);
         }
+        ok $class;
     }
 }
 
 __PACKAGE__->runtests;
 
 1;
+
+
+
+
