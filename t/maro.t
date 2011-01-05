@@ -158,7 +158,7 @@ sub _create_and_find_with_false_value : Test(4) {
     is $entry->author, '';
 }
 
-sub _create_and_find_with_super_column : Tests {
+sub _create_and_find_with_super_column : Test(6) {
     my $key = rand;
     my $super_column = rand;
     my $entry = TestModel::SuperUTF8->create(
@@ -168,8 +168,9 @@ sub _create_and_find_with_super_column : Tests {
         body => 'abcabc',
         author => 'abcabcabc',
     );
+    ok $entry;
 
-    $entry = TestModel::SuperUTF8->find($super_column, $key);
+    $entry = TestModel::SuperUTF8->find($key, $super_column);
     is $entry->key, $key;
     is $entry->super_column, $super_column;
     is $entry->{title}, 'abc';
@@ -285,7 +286,7 @@ sub _slice_as_list : Test(12) {
     $tl->delete;
 }
 
-sub _slice_as_list_super_column : Tests {
+sub _slice_as_list_super_column : Test(3) {
     my $key = rand;
     for(1..9) {
         TestModel::SuperUTF8->create(
@@ -304,7 +305,7 @@ sub _slice_as_list_super_column : Tests {
 
     $entry->title('title modified');
 
-    $entry = TestModel::SuperUTF8->find($entry->super_column, $entry->key);
+    $entry = TestModel::SuperUTF8->find($entry->key, $entry->super_column);
     is $entry->title, 'title modified';
 }
 

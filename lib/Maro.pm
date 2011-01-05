@@ -16,11 +16,11 @@ __PACKAGE__->mk_classdata(default_driver_class => 'Maro::Driver::Net::Cassandra:
 # public
 
 sub new_by_key {
-    my ($class, $key1, $key2) = @_;
-    if ($key2) {
-        $class->new(super_column => $key1, key => $key2);
+    my ($class, $key, $super_column) = @_;
+    if ($super_column) {
+        $class->new(key => $key, super_column => $super_column);
     } else {
-        $class->new(key => $key1);
+        $class->new(key => $key);
     }
 }
 
@@ -35,7 +35,7 @@ sub create {
     my $super_column = delete $params{super_column};
     croak "no key" unless defined $key;
 
-    my $self = $super_column ? $class->new_by_key($super_column, $key) : $class->new_by_key($key);
+    my $self = $super_column ? $class->new_by_key($key, $super_column) : $class->new_by_key($key);
 
     for my $column (keys %params) {
         $self->$column($params{$column});
@@ -49,8 +49,8 @@ sub create_now {
 }
 
 sub find {
-    my ($class, $key1, $key2) = @_;
-    my $self = $class->new_by_key($key1, $key2);
+    my ($class, $key, $super_column) = @_;
+    my $self = $class->new_by_key($key, $super_column);
     $self->load_columns if $class->is_object;
     $self;
 }
