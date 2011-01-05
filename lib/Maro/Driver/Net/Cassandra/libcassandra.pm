@@ -20,6 +20,8 @@ sub new {
 sub set {
     my ($self, $arg, $value) = @_;
     $self->validate_key_arg($arg);
+
+    $value = '' unless defined $value;
     $self->key_space($arg->{key_space})->insertColumn($arg->{key}, $arg->{column_family}, $arg->{super_column}, $arg->{column}, $value);
     1;
 }

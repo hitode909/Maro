@@ -125,6 +125,12 @@ sub delete {
     $self->driver->delete({$self->default_keys});
 }
 
+sub delete_column {
+    my ($self, $column_name) = @_;
+    $self->driver->delete({$self->default_keys, column => $column_name});
+    $self->{$column_name} = undef;
+}
+
 sub count {
     my ($self, %args) = @_;
     my $option = {$self->default_keys};
@@ -251,7 +257,10 @@ sub param {
         my $self = shift;
         @_ % 2 and croak "You gave me an odd number of parameters to param()!";
         my %args = @_;
-        $self->{$_} = $args{$_} for (keys %args);
+        for (keys %args) {
+            $args{$_} = '' unless defined $args{$_};
+            $self->{$_} = $args{$_};
+        }
         $self->set_param(%args);
     } else {
         my ($self, $column) = @_;
@@ -306,6 +315,7 @@ sub get_param {
 
 sub set_param {
     my ($self, $column, $value) = @_;
+    $value = '' unless defined $value;
     $self->driver->set({
         column => $column,
         $self->default_keys,

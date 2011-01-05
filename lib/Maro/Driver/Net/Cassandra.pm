@@ -25,6 +25,8 @@ sub set {
     my ($self, $arg, $value) = @_;
     $self->validate_key_arg($arg);
 
+    $value = '' unless defined $value;
+
     eval {
         $self->client->insert(
             $arg->{key_space},

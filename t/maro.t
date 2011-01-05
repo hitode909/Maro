@@ -62,6 +62,21 @@ sub _create : Test(5) {
     is $entry->author, 'poepoepoe';
 }
 
+sub _create_with_false_value : Test(4) {
+    my $key = rand;
+    my $entry = TestModel::StandardUTF8->create(
+        key => $key,
+        title => '',
+        body => 0,
+        author => undef,
+    );
+
+    is $entry->key, $key;
+    is $entry->title, '';
+    is $entry->body, 0;
+    is $entry->author, '';
+}
+
 sub _create_now : Test(4) {
     my $key = rand;
     my $entry = TestModel::SuperTime->create_now(
@@ -91,6 +106,48 @@ sub _create_and_find : Test(4) {
     is $entry->{title}, 'poe';
     is $entry->{body}, 'poepoe';
     is $entry->{author}, 'poepoepoe';
+}
+
+sub _delete : Test(5) {
+    my $key = rand;
+    my $entry = TestModel::StandardUTF8->create(
+        key => $key,
+        title => 'poe',
+        body => 'poepoe',
+        author => 'poepoepoe',
+    );
+
+    $entry = TestModel::StandardUTF8->find($key);
+    is $entry->title, 'poe';
+
+    $entry->delete_column('body');
+    is $entry->body, undef;
+
+    $entry = TestModel::StandardUTF8->find($key);
+    is $entry->body, undef;
+    is $entry->author, 'poepoepoe';
+
+    $entry->delete;
+
+    $entry = TestModel::StandardUTF8->find($key);
+    is $entry->title, undef;
+}
+
+sub _create_and_find_with_false_value : Test(4) {
+    my $key = rand;
+    my $entry = TestModel::StandardUTF8->create(
+        key => $key,
+        title => '',
+        body => 0,
+        author => undef,
+    );
+
+    $entry = TestModel::StandardUTF8->find($key);
+
+    is $entry->key, $key;
+    is $entry->title, '';
+    is $entry->body, 0;
+    is $entry->author, '';
 }
 
 sub _create_and_find_with_super_column : Tests {
