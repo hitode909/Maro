@@ -55,6 +55,11 @@ sub find {
     $self;
 }
 
+sub is_empty {
+    my ($self) = @_;
+    $self->count == 0;
+}
+
 sub set_as_list_class {
     my ($class) = @_;
     $class->_is_list(1);

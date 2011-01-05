@@ -108,6 +108,14 @@ sub _create_and_find : Test(4) {
     is $entry->{author}, 'poepoepoe';
 }
 
+sub _is_empty : Test(2) {
+    my $key = rand;
+    my $entry = TestModel::StandardUTF8->find($key);
+    ok $entry->is_empty;
+    $entry->body('aaa');
+    ok not $entry->is_empty;
+}
+
 sub _delete : Test(5) {
     my $key = rand;
     my $entry = TestModel::StandardUTF8->create(
