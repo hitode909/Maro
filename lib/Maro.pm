@@ -277,7 +277,7 @@ sub driver {
     my ($class) = @_;
     return $class->driver_object if $class->driver_object;
     my $driver_class = $class->default_driver_class || $class->driver_class;
-    $driver_class->require or croak "Could not load driver ${class->driver_class}: $@";
+    $driver_class->require or croak "Could not load driver ${\($class->driver_class)}: $@";
     $class->driver_object($driver_class->new($class->server_host || 'localhost', $class->server_port || 9160));
 }
 
