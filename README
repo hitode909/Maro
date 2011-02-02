@@ -1,0 +1,50 @@
+NAME
+
+Maro - Object Cassandra Mapper
+
+SYNOPSIS
+
+      # Define model
+      package Blog::Entry;
+      use strict;
+      use warnings;
+      use base qw(Maro);
+      __PACKAGE__->key_space('Blog');
+      __PACKAGE__->column_family('Entry');
+
+      1;
+
+      # Create column
+      my $entry = Blog::Entry->create(
+        key     => 123,
+        title => 'new entry!',
+      );
+
+      print $entry->title; # new entry!
+
+      # Edit column
+      $entry->title('this is new body');
+      $entry->body('this is body');
+
+      # Find column by key
+      my $entry = Blog::Entry->find(123);
+
+      print $entry->title; # new entry!
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+  cassandra 0.6.5
+  libcassandra 0.6.5 branch  (https://github.com/hitode909/libcassandra/tree/0.6.5)
+  net-cassandra-libcassandra (https://github.com/hitode909/net-cassandra-libcassandra)
+
+LICENSE AND COPYRIGHT
+
+Copyright (C) 2011 Hatena
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+
+See http://dev.perl.org/licenses/ for more information.
